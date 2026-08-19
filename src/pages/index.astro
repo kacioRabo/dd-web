@@ -1,5 +1,5 @@
 ---
-import { getCollection, getEntry, render } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { site, withBase } from '../lib/site';
 import seo from '../data/seo.json';
@@ -8,6 +8,8 @@ import LightShow from '../components/LightShow.astro';
 import SocialFeeds from '../components/SocialFeeds.astro';
 import RealizationCard from '../components/RealizationCard.astro';
 import Nap from '../components/Nap.astro';
+import MarkdownContent from '../components/MarkdownContent.astro';
+import { renderedHtml } from '../lib/base';
 
 const ofertaIntro = await getEntry('pages', 'oferta');
 const about = await getEntry('pages', 'o-firmie');
@@ -15,18 +17,7 @@ const refs = await getEntry('pages', 'referencje');
 const contact = await getEntry('pages', 'kontakt');
 if (!ofertaIntro || !about || !refs || !contact) throw new Error('Brak treści stron');
 
-const { Content: OfertaIntro } = await render(ofertaIntro);
-const { Content: AboutContent } = await render(about);
-const { Content: RefsContent } = await render(refs);
-const { Content: ContactIntro } = await render(contact);
-
 const oferta = (await getCollection('oferta')).sort((a, b) => a.data.order - b.data.order);
-const ofertaBlocks = await Promise.all(
-  oferta.map(async (item) => ({
-    ...item,
-    Content: (await render(item)).Content,
-  })),
-);
 const realizacje = (await getCollection('realizacje'))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 3);
@@ -66,7 +57,7 @@ const realizacje = (await getCollection('realizacje'))
       <p class="eyebrow">Kim jesteśmy</p>
       <h2>{about.data.title}</h2>
       <div class="prose prose-on-dark">
-        <AboutContent />
+        <MarkdownContent html={renderedHtml(about)} />
       </div>
     </div>
   </section>
@@ -76,13 +67,13 @@ const realizacje = (await getCollection('realizacje'))
       <p class="eyebrow">Co robimy</p>
       <h2>{ofertaIntro.data.title}</h2>
       <div class="prose">
-        <OfertaIntro />
+        <MarkdownContent html={renderedHtml(ofertaIntro)} />
       </div>
     </div>
   </section>
 
   {
-    ofertaBlocks.map((item, index) => (
+    oferta.map((item, index) => (
       <section class:list={['feature', index % 2 === 1 && 'feature-flip']} id={item.id}>
         <div class="feature-media">
           <img src={withBase(item.data.image)} alt={`${item.data.title} — Dobry Dźwięk, Poznań`} width="1400" height="900" loading="lazy" />
@@ -91,7 +82,7 @@ const realizacje = (await getCollection('realizacje'))
           <p class="eyebrow">Oferta</p>
           <h2>{item.data.title}</h2>
           <div class="prose">
-            <item.Content />
+            <MarkdownContent html={renderedHtml(item)} />
           </div>
           <a class="btn btn-primary" href={`tel:${site.phonePrimary}`}>
             Zapytaj o wycenę
@@ -106,7 +97,7 @@ const realizacje = (await getCollection('realizacje'))
       <p class="eyebrow">Zaufali nam</p>
       <h2>{refs.data.title}</h2>
       <div class="prose">
-        <RefsContent />
+        <MarkdownContent html={renderedHtml(refs)} />
       </div>
       <div class="logos">
         {
@@ -132,7 +123,7 @@ const realizacje = (await getCollection('realizacje'))
         {
           realizacje.map((item) => (
             <RealizationCard
-              href={`/realizacje/${item.id}/`}
+              href={withBase(`/realizacje/${item.id}/`)}
               title={item.data.title}
               image={item.data.image}
               excerpt={item.data.excerpt}
@@ -180,7 +171,7 @@ const realizacje = (await getCollection('realizacje'))
       <p class="eyebrow">Porozmawiajmy</p>
       <h2>{contact.data.title}</h2>
       <div class="prose">
-        <ContactIntro />
+        <MarkdownContent html={renderedHtml(contact)} />
       </div>
       <div class="grid contact-grid">
         <div>

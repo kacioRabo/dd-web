@@ -1,11 +1,13 @@
 ---
-import { getCollection, getEntry, render } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import OfferCard from '../../components/OfferCard.astro';
+import { withBase } from '../../lib/site';
+import MarkdownContent from '../../components/MarkdownContent.astro';
+import { renderedHtml } from '../../lib/base';
 
 const page = await getEntry('pages', 'oferta');
 if (!page) throw new Error('Brak treści oferty');
-const { Content } = await render(page);
 const items = (await getCollection('oferta')).sort((a, b) => a.data.order - b.data.order);
 ---
 
@@ -26,12 +28,12 @@ const items = (await getCollection('oferta')).sort((a, b) => a.data.order - b.da
   <section class="section" style="padding-top: 0;">
     <div class="wrap">
       <div class="prose">
-        <Content />
+        <MarkdownContent html={renderedHtml(page)} />
       </div>
       <div class="grid offer-grid" style="margin-top: 1.5rem;">
         {
           items.map((item) => (
-            <OfferCard href={`/${item.id}/`} title={item.data.cardTitle} image={item.data.image} />
+            <OfferCard href={withBase(`/${item.id}/`)} title={item.data.cardTitle} image={item.data.image} />
           ))
         }
       </div>

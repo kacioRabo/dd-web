@@ -1,7 +1,9 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import { site, canonical, withBase } from '../../lib/site';
+import MarkdownContent from '../../components/MarkdownContent.astro';
+import { renderedHtml } from '../../lib/base';
 
 export async function getStaticPaths() {
   const items = await getCollection('realizacje');
@@ -9,7 +11,6 @@ export async function getStaticPaths() {
 }
 
 const { item } = Astro.props;
-const { Content } = await render(item);
 const url = canonical(`/realizacje/${item.id}/`);
 const image = new URL(item.data.image, site.url).href;
 
@@ -67,7 +68,7 @@ const extraJsonLd = {
           {item.data.services.map((service) => <li>{service}</li>)}
         </ul>
         <div class="prose">
-          <Content />
+          <MarkdownContent html={renderedHtml(item)} />
         </div>
         <p style="margin-top: 1.75rem;">
           <a class="btn btn-primary" href={`tel:${site.phonePrimary}`}>Zapytaj o wycenę</a>

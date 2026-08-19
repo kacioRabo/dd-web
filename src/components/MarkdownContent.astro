@@ -1,0 +1,11 @@
+---
+import { prefixHtml } from '../lib/base';
+
+interface Props {
+  html?: string;
+}
+
+const html = prefixHtml(Astro.props.html ?? '', import.meta.env.BASE_URL || '/');
+---
+
+<Fragment set:html={html} />

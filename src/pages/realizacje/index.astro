@@ -1,11 +1,13 @@
 ---
-import { getCollection, getEntry, render } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import RealizationCard from '../../components/RealizationCard.astro';
+import { withBase } from '../../lib/site';
+import MarkdownContent from '../../components/MarkdownContent.astro';
+import { renderedHtml } from '../../lib/base';
 
 const page = await getEntry('pages', 'realizacje');
 if (!page) throw new Error('Brak treści realizacji');
-const { Content } = await render(page);
 const items = (await getCollection('realizacje')).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
@@ -28,13 +30,13 @@ const items = (await getCollection('realizacje')).sort(
   <section class="section" style="padding-top: 0;">
     <div class="wrap">
       <div class="prose">
-        <Content />
+        <MarkdownContent html={renderedHtml(page)} />
       </div>
       <div class="grid news-grid" style="margin-top: 1.5rem;">
         {
           items.map((item) => (
             <RealizationCard
-              href={`/realizacje/${item.id}/`}
+              href={withBase(`/realizacje/${item.id}/`)}
               title={item.data.title}
               image={item.data.image}
               excerpt={item.data.excerpt}

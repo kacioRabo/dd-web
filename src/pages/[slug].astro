@@ -1,8 +1,10 @@
 ---
-import { getCollection, getEntry, render } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { site, withBase } from '../lib/site';
 import Nap from '../components/Nap.astro';
+import MarkdownContent from '../components/MarkdownContent.astro';
+import { renderedHtml } from '../lib/base';
 
 export async function getStaticPaths() {
   const pages = await getCollection('pages');
@@ -28,7 +30,6 @@ const { kind, id } = Astro.props;
 const entry =
   kind === 'page' ? await getEntry('pages', id) : await getEntry('oferta', id);
 if (!entry) throw new Error(`Brak treści: ${id}`);
-const { Content } = await render(entry);
 const data = entry.data;
 const image = 'image' in data ? data.image : undefined;
 const breadcrumbs =
@@ -66,7 +67,7 @@ const breadcrumbs =
         )
       }
       <div class="prose">
-        <Content />
+        <MarkdownContent html={renderedHtml(entry)} />
       </div>
 
       {

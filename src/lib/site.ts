@@ -1,4 +1,5 @@
 import siteJson from '../data/site.json';
+import { applyBase } from './base';
 
 function httpsUrl(value: string, hosts: string[], pathPrefix?: string) {
   try {
@@ -24,12 +25,7 @@ export const site = {
 };
 
 export function withBase(path = '/') {
-  if (/^[a-z][a-z0-9+.-]*:/i.test(path) || path.startsWith('//')) return path;
-  const base = import.meta.env.BASE_URL || '/';
-  const prefix = base.endsWith('/') ? base.slice(0, -1) : base;
-  if (path === '/' || path === '') return `${prefix}/`;
-  if (prefix && (path === prefix || path.startsWith(`${prefix}/`))) return path;
-  return `${prefix}${path.startsWith('/') ? path : `/${path}`}`;
+  return applyBase(path, import.meta.env.BASE_URL || '/');
 }
 
 export function pageTitle(seoTitle: string | undefined, title: string) {
