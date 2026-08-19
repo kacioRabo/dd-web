@@ -1,0 +1,76 @@
+---
+import { site } from '../lib/site';
+import logo from '../assets/logo.png';
+
+const path = Astro.url.pathname;
+const links = [
+  { href: '/#o-firmie', id: 'o-firmie', label: 'O firmie' },
+  { href: '/#oferta', id: 'oferta', label: 'Oferta' },
+  { href: '/realizacje/', id: 'realizacje', label: 'Realizacje' },
+  { href: '/#referencje', id: 'referencje', label: 'Referencje' },
+  { href: '/#aktualnosci', id: 'aktualnosci', label: 'Aktualności' },
+  { href: '/#kontakt', id: 'kontakt', label: 'Kontakt' },
+];
+---
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="logo" href="/#start" title={site.name}>
+      <img src={logo.src} width={logo.width} height={logo.height} alt={site.name} />
+    </a>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" />
+    <label class="nav-toggle-btn" for="nav-toggle" aria-label="Otwórz menu">
+      <span></span>
+    </label>
+    <nav class="nav" aria-label="Główne">
+      {
+        links.map((item) => (
+          <a href={item.href} data-section={item.id} aria-current={path.startsWith('/realizacje/') && item.id === 'realizacje' ? 'page' : undefined}>
+            {item.label}
+          </a>
+        ))
+      }
+      <a class="btn btn-primary" href={`tel:${site.phonePrimary}`}>Zadzwoń</a>
+    </nav>
+  </div>
+</header>
+
+<script is:inline>
+  (function () {
+    const toggle = document.getElementById('nav-toggle');
+    document.querySelectorAll('.nav a').forEach((link) => {
+      link.addEventListener('click', () => {
+        if (toggle) toggle.checked = false;
+      });
+    });
+
+    if (!document.getElementById('start')) return;
+
+    const links = [...document.querySelectorAll('.nav a[data-section]')];
+    const sections = links
+      .map((link) => document.getElementById(link.getAttribute('data-section')))
+      .filter(Boolean);
+
+    const setCurrent = (id) => {
+      links.forEach((link) => {
+        const active = link.getAttribute('data-section') === id;
+        if (active) link.setAttribute('aria-current', 'page');
+        else link.removeAttribute('aria-current');
+      });
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible?.target?.id) setCurrent(visible.target.id);
+      },
+      { rootMargin: '-28% 0px -55% 0px', threshold: [0.15, 0.35, 0.6] },
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    const start = document.getElementById('start');
+    if (start) observer.observe(start);
+  })();
+</script>

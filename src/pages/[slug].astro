@@ -1,0 +1,164 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { site } from '../lib/site';
+import Nap from '../components/Nap.astro';
+
+export async function getStaticPaths() {
+  const pages = await getCollection('pages');
+  const oferta = await getCollection('oferta');
+  const reserved = new Set(['oferta', 'realizacje', 'admin']);
+  return [
+    ...pages
+      .filter((entry) => !reserved.has(entry.id))
+      .map((entry) => ({ params: { slug: entry.id }, props: { kind: 'page' as const, id: entry.id } })),
+    ...oferta.map((entry) => ({
+      params: { slug: entry.id },
+      props: { kind: 'oferta' as const, id: entry.id },
+    })),
+  ];
+}
+
+interface Props {
+  kind: 'page' | 'oferta';
+  id: string;
+}
+
+const { kind, id } = Astro.props;
+const entry =
+  kind === 'page' ? await getEntry('pages', id) : await getEntry('oferta', id);
+if (!entry) throw new Error(`Brak treści: ${id}`);
+const { Content } = await render(entry);
+const data = entry.data;
+const image = 'image' in data ? data.image : undefined;
+const breadcrumbs =
+  kind === 'oferta'
+    ? [
+        { name: 'Strona główna', href: '/' },
+        { name: 'Oferta', href: '/oferta/' },
+        { name: data.title, href: `/${id}/` },
+      ]
+    : [
+        { name: 'Strona główna', href: '/' },
+        { name: data.title, href: `/${id}/` },
+      ];
+---
+
+<Base
+  title={data.title}
+  seoTitle={data.seoTitle}
+  description={data.seoDescription || data.description}
+  image={image}
+  breadcrumbs={breadcrumbs}
+>
+  <section class="page-hero">
+    <div class="wrap">
+      <h1>{data.title}</h1>
+    </div>
+  </section>
+  <section class="section" style="padding-top: 0;">
+    <div class="wrap">
+      {
+        image && (
+          <p>
+            <img src={image} alt={data.title} width="1200" height="640" style="width:100%;max-height:22rem;object-fit:cover;border-radius:var(--radius);" />
+          </p>
+        )
+      }
+      <div class="prose">
+        <Content />
+      </div>
+
+      {
+        kind === 'page' && id === 'referencje' && (
+          <>
+            <div class="logos" style="margin-top: 2rem;">
+              {site.clients.map((client) => (
+                <figure>
+                  <img src={client.src} alt={client.name} width="160" height="80" loading="lazy" />
+                </figure>
+              ))}
+            </div>
+            <h2>Agencje i partnerzy</h2>
+            <ul class="agency-list">
+              {site.agencies.map((name) => (
+                <li>{name}</li>
+              ))}
+            </ul>
+          </>
+        )
+      }
+
+      {
+        kind === 'page' && id === 'kontakt' && (
+          <div class="grid contact-grid" style="margin-top: 1.5rem;">
+            <div>
+              <Nap />
+              <p>REGON {site.legal.regon}</p>
+              <p>
+                <a class="btn btn-primary" href={`tel:${site.phonePrimary}`}>
+                  Zadzwoń {site.phonePrimaryLabel}
+                </a>
+              </p>
+              <p>
+                <a href={`mailto:${site.email}`}>{site.email}</a>
+                <br />
+                <a href={site.facebook} rel="noopener noreferrer">
+                  Facebook
+                </a>
+                <br />
+                <a href={site.instagram} rel="noopener noreferrer">
+                  Instagram
+                </a>
+              </p>
+            </div>
+            <div>
+              {site.people.map((person) => (
+                <div class="person" style="margin-bottom: 0.75rem;">
+                  <h3>{person.name}</h3>
+                  <p>{person.role}</p>
+                  <a href={`tel:${person.phone}`}>{person.phoneLabel}</a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      }
+      {
+        kind === 'page' && id === 'kontakt' && (
+          <div class="map" style="margin-top: 1.5rem;">
+            <h2>Sprawdź, jak do nas trafić</h2>
+            {
+              site.mapEmbed ? (
+                <iframe
+                  title="Mapa — Dobry Dźwięk, Poznań"
+                  src={site.mapEmbed}
+                  loading="lazy"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                  allowfullscreen
+                />
+              ) : null
+            }
+          </div>
+        )
+      }
+
+      {
+        kind === 'oferta' && (
+          <p style="margin-top: 1.75rem;">
+            <a class="btn btn-primary" href={`tel:${site.phonePrimary}`}>
+              Zapytaj o wycenę
+            </a>
+            <a class="btn btn-ghost" href="/oferta/" style="margin-left: 0.5rem;">
+              Wróć do oferty
+            </a>
+            <a class="btn btn-ghost" href="/realizacje/" style="margin-left: 0.5rem;">
+              Realizacje
+            </a>
+          </p>
+        )
+      }
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,236 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { site } from '../lib/site';
+import seo from '../data/seo.json';
+import ScrollMotion from '../components/ScrollMotion.astro';
+import LightShow from '../components/LightShow.astro';
+import SocialFeeds from '../components/SocialFeeds.astro';
+import RealizationCard from '../components/RealizationCard.astro';
+import Nap from '../components/Nap.astro';
+
+const ofertaIntro = await getEntry('pages', 'oferta');
+const about = await getEntry('pages', 'o-firmie');
+const refs = await getEntry('pages', 'referencje');
+const contact = await getEntry('pages', 'kontakt');
+if (!ofertaIntro || !about || !refs || !contact) throw new Error('Brak treści stron');
+
+const { Content: OfertaIntro } = await render(ofertaIntro);
+const { Content: AboutContent } = await render(about);
+const { Content: RefsContent } = await render(refs);
+const { Content: ContactIntro } = await render(contact);
+
+const oferta = (await getCollection('oferta')).sort((a, b) => a.data.order - b.data.order);
+const ofertaBlocks = await Promise.all(
+  oferta.map(async (item) => ({
+    ...item,
+    Content: (await render(item)).Content,
+  })),
+);
+const realizacje = (await getCollection('realizacje'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+---
+
+<Base
+  title="Nagłośnienie, oświetlenie i obsługa techniczna eventów"
+  seoTitle="Nagłośnienie i oświetlenie Poznań | Dobry Dźwięk Technika Eventowa"
+  description="Nagłośnienie, oświetlenie i scena na eventy w Poznaniu. Realizacja dźwięku i światła, technika estradowa oraz obsługa techniczna koncertów i imprez."
+  image="/images/hero.jpg"
+  faq={seo.faq}
+>
+  <section class="stage stage-hero" id="start">
+    <img
+      src="/images/hero.jpg"
+      alt="Nagłośnienie, oświetlenie i scena na evencie — Dobry Dźwięk, Poznań"
+      width="1400"
+      height="900"
+      loading="eager"
+      fetchpriority="high"
+    />
+    <LightShow />
+    <div class="stage-hero-copy reveal is-in">
+      <p class="eyebrow">{site.shortName} · Poznań</p>
+      <h1>Nagłośnienie, oświetlenie i obsługa techniczna eventów</h1>
+      <p class="stage-lead">{site.tagline} Realizacja dźwięku i światła od małej sceny klubowej po imprezy na tysiące osób.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary js-hero-call" href={`tel:${site.phonePrimary}`}>Zadzwoń {site.phonePrimaryLabel}</a>
+        <a class="btn btn-white js-hero-offer" href="#oferta">Zobacz ofertę</a>
+        <a class="btn btn-white" href="/realizacje/">Realizacje</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage stage-dark" id="o-firmie">
+    <div class="stage-copy reveal">
+      <p class="eyebrow">Kim jesteśmy</p>
+      <h2>{about.data.title}</h2>
+      <div class="prose prose-on-dark">
+        <AboutContent />
+      </div>
+    </div>
+  </section>
+
+  <section class="stage stage-light" id="oferta">
+    <div class="stage-copy reveal">
+      <p class="eyebrow">Co robimy</p>
+      <h2>{ofertaIntro.data.title}</h2>
+      <div class="prose">
+        <OfertaIntro />
+      </div>
+    </div>
+  </section>
+
+  {
+    ofertaBlocks.map((item, index) => (
+      <section class:list={['feature', index % 2 === 1 && 'feature-flip']} id={item.id}>
+        <div class="feature-media">
+          <img src={item.data.image} alt={`${item.data.title} — Dobry Dźwięk, Poznań`} width="1400" height="900" loading="lazy" />
+        </div>
+        <div class="feature-copy reveal">
+          <p class="eyebrow">Oferta</p>
+          <h2>{item.data.title}</h2>
+          <div class="prose">
+            <item.Content />
+          </div>
+          <a class="btn btn-primary" href={`tel:${site.phonePrimary}`}>
+            Zapytaj o wycenę
+          </a>
+        </div>
+      </section>
+    ))
+  }
+
+  <section class="stage stage-light" id="referencje">
+    <div class="stage-copy stage-copy-wide reveal">
+      <p class="eyebrow">Zaufali nam</p>
+      <h2>{refs.data.title}</h2>
+      <div class="prose">
+        <RefsContent />
+      </div>
+      <div class="logos">
+        {
+          site.clients.map((client) => (
+            <figure>
+              <img src={client.src} alt={client.name} width="160" height="80" loading="lazy" />
+            </figure>
+          ))
+        }
+      </div>
+      <ul class="agency-list">
+        {site.agencies.map((name) => <li>{name}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="stage stage-dark" id="realizacje">
+    <div class="stage-copy stage-copy-wide reveal">
+      <p class="eyebrow">Portfolio</p>
+      <h2>Realizacje — Poznań i Wielkopolska</h2>
+      <p class="stage-lead">Miasto, typ wydarzenia i zakres: nagłośnienie, oświetlenie, scena albo pełna obsługa techniczna.</p>
+      <div class="grid news-grid">
+        {
+          realizacje.map((item) => (
+            <RealizationCard
+              href={`/realizacje/${item.id}/`}
+              title={item.data.title}
+              image={item.data.image}
+              excerpt={item.data.excerpt}
+              city={item.data.city}
+              eventType={item.data.eventType}
+              date={item.data.date}
+            />
+          ))
+        }
+      </div>
+      <p style="margin-top: 1.25rem;">
+        <a class="btn btn-white" href="/realizacje/">Wszystkie realizacje</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="stage stage-dark" id="aktualnosci">
+    <div class="stage-copy stage-copy-wide reveal">
+      <p class="eyebrow">Newsy</p>
+      <h2>Aktualności</h2>
+      <p class="stage-lead">Relacje z realizacji i nowości — na bieżąco z Facebooka i Instagrama.</p>
+      <SocialFeeds />
+    </div>
+  </section>
+
+  <section class="stage stage-light" id="faq">
+    <div class="stage-copy reveal">
+      <p class="eyebrow">Pytania</p>
+      <h2>Nagłośnienie, oświetlenie i obsługa techniczna</h2>
+      <div class="faq">
+        {
+          seo.faq.map((item) => (
+            <details>
+              <summary>{item.question}</summary>
+              <p>{item.answer}</p>
+            </details>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="stage stage-light" id="kontakt">
+    <div class="stage-copy stage-copy-wide reveal">
+      <p class="eyebrow">Porozmawiajmy</p>
+      <h2>{contact.data.title}</h2>
+      <div class="prose">
+        <ContactIntro />
+      </div>
+      <div class="grid contact-grid">
+        <div>
+          <Nap />
+          <p>REGON {site.legal.regon}</p>
+          <p>
+            <a class="btn btn-primary" href={`tel:${site.phonePrimary}`}>
+              Zadzwoń {site.phonePrimaryLabel}
+            </a>
+          </p>
+          <p>
+            <a href={`mailto:${site.email}`}>{site.email}</a>
+            <br />
+            <a href={site.facebook} rel="noopener noreferrer">
+              Facebook
+            </a>
+            <br />
+            <a href={site.instagram} rel="noopener noreferrer">
+              Instagram
+            </a>
+          </p>
+        </div>
+        <div>
+          {
+            site.people.map((person) => (
+              <div class="person">
+                <h3>{person.name}</h3>
+                <p>{person.role}</p>
+                <a href={`tel:${person.phone}`}>{person.phoneLabel}</a>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+      <div class="map">
+        <h3>Technika eventowa w Poznaniu — jak do nas trafić</h3>
+        {
+          site.mapEmbed ? (
+            <iframe
+              title="Mapa — Dobry Dźwięk, Poznań"
+              src={site.mapEmbed}
+              loading="lazy"
+              referrerpolicy="strict-origin-when-cross-origin"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+              allowfullscreen
+            />
+          ) : null
+        }
+      </div>
+    </div>
+  </section>
+  <ScrollMotion />
+</Base>

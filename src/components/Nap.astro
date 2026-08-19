@@ -1,0 +1,19 @@
+---
+import { site } from '../lib/site';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<address class:list={['nap', className]}>
+  <strong>{site.legal.company}</strong>
+  <br />
+  {site.address.street}
+  <br />
+  {site.address.postal} {site.address.city}
+  <br />
+  NIP {site.legal.nip}
+</address>

@@ -1,0 +1,86 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { site, canonical } from '../../lib/site';
+
+export async function getStaticPaths() {
+  const items = await getCollection('realizacje');
+  return items.map((item) => ({ params: { slug: item.id }, props: { item } }));
+}
+
+const { item } = Astro.props;
+const { Content } = await render(item);
+const url = canonical(`/realizacje/${item.id}/`);
+const image = new URL(item.data.image, site.url).href;
+
+const extraJsonLd = {
+  '@type': 'CreativeWork',
+  '@id': `${url}#work`,
+  name: item.data.title,
+  description: item.data.description,
+  datePublished: item.data.date.toISOString(),
+  image,
+  url,
+  inLanguage: 'pl-PL',
+  about: item.data.services,
+  contentLocation: {
+    '@type': 'City',
+    name: item.data.city,
+  },
+  creator: {
+    '@id': `${site.url}/#business`,
+  },
+};
+---
+
+<Base
+  title={item.data.title}
+  seoTitle={item.data.seoTitle}
+  description={item.data.seoDescription || item.data.description}
+  image={item.data.image}
+  extraJsonLd={extraJsonLd}
+  breadcrumbs={[
+    { name: 'Strona główna', href: '/' },
+    { name: 'Realizacje', href: '/realizacje/' },
+    { name: item.data.title, href: `/realizacje/${item.id}/` },
+  ]}
+>
+  <article>
+    <section class="page-hero">
+      <div class="wrap">
+        <p class="case-meta">{item.data.city} · {item.data.eventType}</p>
+        <h1>{item.data.title}</h1>
+      </div>
+    </section>
+    <section class="section" style="padding-top: 0;">
+      <div class="wrap">
+        <p>
+          <img
+            src={item.data.image}
+            alt={`${item.data.title} — ${item.data.city}`}
+            width="1200"
+            height="640"
+            style="width:100%;max-height:22rem;object-fit:cover;border-radius:var(--radius);"
+          />
+        </p>
+        <ul class="agency-list" aria-label="Zakres realizacji">
+          {item.data.services.map((service) => <li>{service}</li>)}
+        </ul>
+        <div class="prose">
+          <Content />
+        </div>
+        <p style="margin-top: 1.75rem;">
+          <a class="btn btn-primary" href={`tel:${site.phonePrimary}`}>Zapytaj o wycenę</a>
+          {
+            item.data.relatedOffer && (
+              <a class="btn btn-ghost" href={`/${item.data.relatedOffer}/`} style="margin-left: 0.5rem;">
+                Zobacz ofertę
+              </a>
+            )
+          }
+          <a class="btn btn-ghost" href="/realizacje/" style="margin-left: 0.5rem;">Wszystkie realizacje</a>
+        </p>
+      </div>
+    </section>
+  </article>
+</Base>

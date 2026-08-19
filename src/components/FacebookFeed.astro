@@ -1,0 +1,73 @@
+---
+import { site } from '../lib/site';
+
+interface Props {
+  height?: number;
+}
+
+const { height = 680 } = Astro.props;
+---
+
+{
+  site.facebook ? (
+<div class="fb-feed social-feed" data-page={site.facebook} data-height={String(height)}>
+  <div class="fb-feed-frame social-feed-frame">
+    <iframe
+      class="fb-feed-iframe social-feed-iframe"
+      title="Posty Dobrego Dźwięku na Facebooku"
+      loading="lazy"
+      referrerpolicy="strict-origin-when-cross-origin"
+      sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+    ></iframe>
+  </div>
+  <p class="fb-feed-more social-feed-more">
+    <a class="btn btn-primary" href={site.facebook} rel="noopener noreferrer">Więcej na Facebooku</a>
+  </p>
+</div>
+  ) : null
+}
+
+<script>
+  const feeds = document.querySelectorAll('.fb-feed');
+
+  const srcFor = (page: string, width: number, height: number) => {
+    const params = new URLSearchParams({
+      href: page,
+      tabs: 'timeline',
+      width: String(width),
+      height: String(height),
+      small_header: 'false',
+      adapt_container_width: 'true',
+      hide_cover: 'false',
+      show_facepile: 'false',
+    });
+    return `https://www.facebook.com/plugins/page.php?${params.toString()}`;
+  };
+
+  const mount = (root: Element) => {
+    const page = root.getAttribute('data-page');
+    const frame = root.querySelector('.fb-feed-frame');
+    const iframe = root.querySelector('.fb-feed-iframe');
+    if (!page || !/^https:\/\/(www\.)?facebook\.com\//.test(page) || !(frame instanceof HTMLElement) || !(iframe instanceof HTMLIFrameElement)) return;
+
+    const height = Number(root.getAttribute('data-height')) || 680;
+    const width = Math.min(500, Math.max(280, Math.floor(frame.clientWidth || 500)));
+    if (iframe.dataset.width === String(width) && iframe.src) return;
+    iframe.dataset.width = String(width);
+    iframe.width = String(width);
+    iframe.height = String(height);
+    iframe.src = srcFor(page, width, height);
+  };
+
+  feeds.forEach((root) => mount(root));
+  let resizeTimer = 0;
+  window.addEventListener(
+    'resize',
+    () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => feeds.forEach((root) => mount(root)), 200);
+    },
+    { passive: true },
+  );
+</script>

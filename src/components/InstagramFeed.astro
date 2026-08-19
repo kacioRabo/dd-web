@@ -1,0 +1,61 @@
+---
+import { site } from '../lib/site';
+
+interface Props {
+  height?: number;
+}
+
+const { height = 680 } = Astro.props;
+const handle = site.instagram ? new URL(site.instagram).pathname.replace(/\//g, '') : '';
+const safeHandle = /^[A-Za-z0-9._]+$/.test(handle) ? handle : '';
+---
+
+{
+  safeHandle ? (
+<div class="social-feed" data-instagram={safeHandle} data-height={String(height)}>
+  <div class="social-feed-frame">
+    <iframe
+      class="social-feed-iframe"
+      title="Posty Dobrego Dźwięku na Instagramie"
+      loading="lazy"
+      referrerpolicy="strict-origin-when-cross-origin"
+      sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+    ></iframe>
+  </div>
+  <p class="social-feed-more">
+    <a class="btn btn-primary" href={site.instagram} rel="noopener noreferrer">Więcej na Instagramie</a>
+  </p>
+</div>
+  ) : null
+}
+
+<script>
+  const feeds = document.querySelectorAll('[data-instagram]');
+
+  const mount = (root: Element) => {
+    const handle = root.getAttribute('data-instagram');
+    const iframe = root.querySelector('.social-feed-iframe');
+    if (!handle || !/^[A-Za-z0-9._]+$/.test(handle) || !(iframe instanceof HTMLIFrameElement)) return;
+
+    const height = Number(root.getAttribute('data-height')) || 680;
+    const frame = root.querySelector('.social-feed-frame');
+    const width = Math.min(540, Math.max(280, Math.floor((frame instanceof HTMLElement ? frame.clientWidth : 0) || 500)));
+    if (iframe.dataset.width === String(width) && iframe.src) return;
+    iframe.dataset.width = String(width);
+    iframe.width = String(width);
+    iframe.height = String(height);
+    iframe.src = `https://www.instagram.com/${handle}/embed`;
+  };
+
+  feeds.forEach((root) => mount(root));
+  let resizeTimer = 0;
+  window.addEventListener(
+    'resize',
+    () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => feeds.forEach((root) => mount(root)), 200);
+    },
+    { passive: true },
+  );
+</script>

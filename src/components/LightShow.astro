@@ -1,0 +1,662 @@
+---
+---
+
+<section class="light-show" id="swiatlo" aria-label="Pokaz świateł scenicznych">
+  <div class="light-show-pin">
+    <canvas class="light-show-canvas"></canvas>
+  </div>
+</section>
+
+<script>
+  const section = document.querySelector('.light-show');
+  const canvas = document.querySelector('.light-show-canvas');
+  if (section instanceof HTMLElement && canvas instanceof HTMLCanvasElement) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (ctx) {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const fixtures = 7;
+      const dust = Array.from({ length: 90 }, () => ({
+        x: Math.random(),
+        y: Math.random(),
+        r: 0.35 + Math.random() * 1.3,
+        s: 0.08 + Math.random() * 0.28,
+      }));
+
+      const colors = [
+        [211, 97, 43],
+        [232, 132, 72],
+        [184, 77, 28],
+        [211, 97, 43],
+        [240, 158, 96],
+        [184, 77, 28],
+        [211, 97, 43],
+      ];
+
+      const motors = Array.from({ length: fixtures }, (_, i) => ({
+        pan: 0,
+        tilt: 0.7,
+        zoom: 0.22,
+        dim: 0.7,
+        speed: 4.2 + (i % 3) * 0.55,
+      }));
+      const focus = { x: 0, y: 0 };
+
+      let width = 0;
+      let height = 0;
+      let padTop = 72;
+      let running = false;
+      let time = 0;
+      let last = performance.now();
+
+      let lastScrollAt = performance.now();
+      let idle = 0;
+      const pointer = { x: 0, y: 0, inside: false };
+      let snapAim = true;
+      const callBtn = document.querySelector('.js-hero-call');
+      const offerBtn = document.querySelector('.js-hero-offer');
+
+      const btnAim = (btn) => {
+        if (!(btn instanceof HTMLElement) || width < 1 || height < 1) return null;
+        const canvasRect = canvas.getBoundingClientRect();
+        const btnRect = btn.getBoundingClientRect();
+        if (canvasRect.width < 1 || btnRect.width < 1) return null;
+        return {
+          x: ((btnRect.left + btnRect.width / 2 - canvasRect.left) / canvasRect.width) * width,
+          y: ((btnRect.top + btnRect.height / 2 - canvasRect.top) / canvasRect.height) * height,
+        };
+      };
+
+      const resize = () => {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const rect = canvas.getBoundingClientRect();
+        width = Math.max(1, Math.floor(rect.width));
+        height = Math.max(1, Math.floor(rect.height));
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const host = section.closest('.stage-hero');
+        padTop = host ? parseFloat(getComputedStyle(host).paddingTop) || 72 : 72;
+      };
+
+      const progress = () => {
+        const host = section.closest('.stage-hero') || section;
+        const rect = host.getBoundingClientRect();
+        const span = Math.max(1, host.offsetHeight * 0.9);
+        return Math.min(1, Math.max(0, -rect.top / span));
+      };
+
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const damp = (cur, target, dt, speed) => cur + (target - cur) * (1 - Math.exp(-speed * dt));
+
+      const drawBeam = (x, y, angle, length, startW, endW, rgb, power) => {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.rect(-width, 0, width * 2, height * 2);
+        ctx.clip();
+        ctx.globalCompositeOperation = 'lighter';
+
+        const cone = (s0, s1, a0, a1, a2, blur) => {
+          ctx.save();
+          ctx.shadowColor = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a0})`;
+          ctx.shadowBlur = blur;
+          ctx.beginPath();
+          ctx.moveTo(-s0, 0);
+          ctx.lineTo(s0, 0);
+          ctx.lineTo(s1, length);
+          ctx.lineTo(-s1, length);
+          ctx.closePath();
+          const g = ctx.createLinearGradient(0, 0, 0, length);
+          g.addColorStop(0, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a0})`);
+          g.addColorStop(0.12, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a1})`);
+          g.addColorStop(0.72, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a2})`);
+          g.addColorStop(1, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0)`);
+          ctx.fillStyle = g;
+          ctx.fill();
+          ctx.restore();
+        };
+
+        cone(startW * 1.2, endW * 2.4, 0.08 * power, 0.05 * power, 0.02 * power, 18);
+        cone(startW, endW, 0.32 * power, 0.16 * power, 0.05 * power, 10);
+        cone(startW * 0.42, endW * 0.35, 0.58 * power, 0.28 * power, 0.08 * power, 4);
+        ctx.restore();
+      };
+
+      const drawFlare = (x, y, rgb, power, aperture) => {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.globalCompositeOperation = 'lighter';
+        const r = aperture * 1.85;
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+        g.addColorStop(0, `rgba(255,255,255,${0.95 * power})`);
+        g.addColorStop(0.18, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${0.7 * power})`);
+        g.addColorStop(0.45, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${0.22 * power})`);
+        g.addColorStop(1, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0)`);
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.restore();
+      };
+
+      const roundRect = (x, y, w, h, r) => {
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(x, y, w, h, r);
+        } else {
+          ctx.rect(x, y, w, h);
+        }
+      };
+
+      const poseOf = (hangX, hangY, panA, tiltA, s) => {
+        const cp = Math.cos(panA);
+        const sp = Math.sin(panA);
+        const ct = Math.cos(tiltA);
+        const st = Math.sin(tiltA);
+
+        const head3 = (lx, ly, lz) => {
+          let y = ly * ct - lz * st;
+          let z = ly * st + lz * ct;
+          const x = lx * cp - z * sp;
+          z = lx * sp + z * cp;
+          return { x, y, z };
+        };
+
+        const yoke3 = (lx, ly, lz) => {
+          const x = lx * cp - lz * sp;
+          const z = lx * sp + lz * cp;
+          return { x, y: ly, z };
+        };
+
+        const project = (p) => {
+          const k = 260 / (260 + p.z);
+          return {
+            x: hangX + p.x * k,
+            y: hangY + p.y * k,
+            z: p.z,
+            k,
+          };
+        };
+
+        const world = (x, y, z) => project({ x: x * s, y: y * s, z: z * s });
+        const head = (x, y, z) => project(head3(x * s, y * s, z * s));
+        const yoke = (x, y, z) => project(yoke3(x * s, y * s, z * s));
+        const lens = head(0, 17.5, 0);
+        const ahead = head(0, 46, 0);
+        const dx = ahead.x - lens.x;
+        const dy = ahead.y - lens.y;
+        const left = head(-19.2, 17.5, 0);
+        const right = head(19.2, 17.5, 0);
+        const aperture = Math.max(5, Math.hypot(right.x - left.x, right.y - left.y) / 2);
+        const beam = head3(0, 1, 0);
+        const farArm = yoke(-24, 0, 0).z <= yoke(24, 0, 0).z ? -24 : 24;
+        return {
+          head,
+          yoke,
+          world,
+          panA,
+          lens,
+          angle: Math.atan2(-dx, dy),
+          aperture,
+          facing: beam.z,
+          pivot: head(0, 0, 0),
+          farArm,
+          nearArm: -farArm,
+        };
+      };
+
+      const pathFaceCircle = (pose, cx, cz, r, y, start) => {
+        const n = 20;
+        for (let i = 0; i <= n; i += 1) {
+          const a = (i / n) * Math.PI * 2;
+          const p = pose.head(cx + Math.cos(a) * r, y, cz + Math.sin(a) * r);
+          if (start && i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        }
+      };
+
+      const pathRing = (pose, y, r, reverse, start) => {
+        const n = 28;
+        for (let i = 0; i <= n; i += 1) {
+          const t = reverse ? n - i : i;
+          const a = (t / n) * Math.PI * 2;
+          const p = pose.head(Math.cos(a) * r, y, Math.sin(a) * r);
+          if (start && i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        }
+      };
+
+      const fillFaceCircle = (pose, cx, cz, r, y) => {
+        ctx.beginPath();
+        pathFaceCircle(pose, cx, cz, r, y, true);
+        ctx.closePath();
+        ctx.fill();
+      };
+
+      const metal = (t) => {
+        const v = Math.round(16 + Math.max(0, Math.min(1, t)) * 38);
+        return `rgb(${v},${v},${v + 3})`;
+      };
+
+      const chrome = (t) => {
+        const v = Math.round(132 + Math.max(0, Math.min(1, t)) * 78);
+        return `rgb(${v},${v + 1},${v + 8})`;
+      };
+
+      const projectedRadius = (pose, y, r) => {
+        const c = pose.head(0, y, 0);
+        let max = 3;
+        for (let i = 0; i < 10; i += 1) {
+          const a = (i / 10) * Math.PI * 2;
+          const p = pose.head(Math.cos(a) * r, y, Math.sin(a) * r);
+          max = Math.max(max, Math.hypot(p.x - c.x, p.y - c.y));
+        }
+        return max;
+      };
+
+      const armWidth = (pose, x) => {
+        const a = pose.yoke(x, 0, 0);
+        const b = pose.yoke(x + (x > 0 ? 6.4 : -6.4), 0, 0);
+        return Math.max(6.2, Math.hypot(b.x - a.x, b.y - a.y));
+      };
+
+      const drawYokeArm = (pose, x, shade) => {
+        const flare = x > 0 ? 1 : -1;
+        const top = pose.yoke(x - flare * 1.2, -27, 0);
+        const mid = pose.yoke(x, -12, 0);
+        const bot = pose.yoke(x, 0, 0);
+        const w = armWidth(pose, x);
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = metal(shade);
+        ctx.lineWidth = w;
+        ctx.beginPath();
+        ctx.moveTo(top.x, top.y);
+        ctx.lineTo(mid.x, mid.y);
+        ctx.lineTo(bot.x, bot.y);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = Math.max(1.4, w * 0.22);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(bot.x, bot.y, w * 0.92, 0, Math.PI * 2);
+        ctx.fillStyle = metal(shade + 0.12);
+        ctx.fill();
+        ctx.strokeStyle = chrome(0.15);
+        ctx.lineWidth = 1.35;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(bot.x, bot.y, w * 0.42, 0, Math.PI * 2);
+        ctx.fillStyle = metal(shade + 0.28);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(bot.x, bot.y, w * 0.18, 0, Math.PI * 2);
+        ctx.fillStyle = '#0a0a0c';
+        ctx.fill();
+        ctx.restore();
+      };
+
+      const drawPanBase = (pose, s) => {
+        const top = pose.world(0, -47, 0);
+        const bot = pose.world(0, -33, 0);
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = metal(0.34);
+        ctx.lineWidth = Math.max(18, 22 * s);
+        ctx.beginPath();
+        ctx.moveTo(top.x, top.y);
+        ctx.lineTo(bot.x, bot.y);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = Math.max(4, 5 * s);
+        ctx.stroke();
+        const screen = pose.world(9.5, -40, 8);
+        const sw = 7.2 * s;
+        const sh = 4.4 * s;
+        ctx.fillStyle = '#070b09';
+        ctx.fillRect(screen.x - sw / 2, screen.y - sh / 2, sw, sh);
+        ctx.fillStyle = 'rgba(212, 168, 48, 0.9)';
+        ctx.fillRect(screen.x - sw * 0.32, screen.y - sh * 0.22, sw * 0.55, 1.1);
+        ctx.fillRect(screen.x - sw * 0.32, screen.y + sh * 0.08, sw * 0.38, 0.8);
+        ctx.restore();
+      };
+
+      const drawYokeBridge = (pose, s) => {
+        const left = pose.yoke(-24, -27, 0);
+        const right = pose.yoke(24, -27, 0);
+        const collar = pose.yoke(0, -31, 0);
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = metal(0.3);
+        ctx.lineWidth = Math.max(8, 9.5 * s);
+        ctx.beginPath();
+        ctx.moveTo(left.x, left.y);
+        ctx.lineTo(right.x, right.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(collar.x, collar.y, Math.max(8, 9.4 * s), 0, Math.PI * 2);
+        ctx.fillStyle = metal(0.38);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        const mark = pose.yoke(7, -31, 0);
+        ctx.beginPath();
+        ctx.arc(mark.x, mark.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#d3612b';
+        ctx.fill();
+        ctx.restore();
+      };
+
+      const drawHeadHousing = (pose, s) => {
+        const rear = pose.head(0, -8, 0);
+        const mid = pose.head(0, 2, 0);
+        const front = pose.head(0, 15.2, 0);
+        const rRear = projectedRadius(pose, -8, 17.2);
+        const rMid = projectedRadius(pose, 2, 19.6);
+        ctx.save();
+        ctx.lineCap = 'round';
+        const rearPaint = ctx.createLinearGradient(rear.x, rear.y, mid.x, mid.y);
+        rearPaint.addColorStop(0, metal(0.12));
+        rearPaint.addColorStop(1, metal(0.34));
+        ctx.strokeStyle = rearPaint;
+        ctx.lineWidth = rRear * 2;
+        ctx.beginPath();
+        ctx.moveTo(rear.x, rear.y);
+        ctx.lineTo(mid.x, mid.y);
+        ctx.stroke();
+        const frontPaint = ctx.createLinearGradient(mid.x, mid.y, front.x, front.y);
+        frontPaint.addColorStop(0, metal(0.34));
+        frontPaint.addColorStop(0.7, metal(0.48));
+        frontPaint.addColorStop(1, metal(0.28));
+        ctx.strokeStyle = frontPaint;
+        ctx.lineWidth = rMid * 2;
+        ctx.beginPath();
+        ctx.moveTo(mid.x, mid.y);
+        ctx.lineTo(front.x, front.y);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+        ctx.lineWidth = Math.max(2, rMid * 0.16);
+        ctx.stroke();
+        for (let k = 0; k < 10; k += 1) {
+          const a = (k / 10) * Math.PI * 2 + 0.18;
+          const c = Math.cos(a);
+          const sn = Math.sin(a);
+          const p0 = pose.head(c * 19.4, -1, sn * 19.4);
+          const p1 = pose.head(c * 19.8, 12, sn * 19.8);
+          ctx.strokeStyle = `rgba(0,0,0,${0.18 + 0.16 * ((c + 1) * 0.5)})`;
+          ctx.lineWidth = Math.max(1.1, 1.35 * s);
+          ctx.beginPath();
+          ctx.moveTo(p0.x, p0.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(rear.x, rear.y, rRear * 0.92, 0, Math.PI * 2);
+        ctx.fillStyle = metal(0.1);
+        ctx.fill();
+        ctx.strokeStyle = metal(0.4);
+        ctx.lineWidth = Math.max(2.4, 2.8 * s);
+        ctx.beginPath();
+        ctx.moveTo(pose.head(-6.8, -9.4, 0).x, pose.head(-6.8, -9.4, 0).y);
+        ctx.lineTo(pose.head(6.8, -9.4, 0).x, pose.head(6.8, -9.4, 0).y);
+        ctx.stroke();
+        ctx.beginPath();
+        pathRing(pose, 16.2, 20.6, false, true);
+        pathRing(pose, 16.6, 18.7, true, false);
+        ctx.closePath();
+        ctx.fillStyle = chrome(0.42);
+        ctx.fill();
+        ctx.beginPath();
+        pathRing(pose, 16.8, 18.5, false, true);
+        pathRing(pose, 17.1, 17.4, true, false);
+        ctx.closePath();
+        ctx.fillStyle = chrome(0.12);
+        ctx.fill();
+        ctx.beginPath();
+        pathRing(pose, 17.4, 17.2, false, true);
+        ctx.closePath();
+        ctx.fillStyle = '#0b0b0d';
+        ctx.fill();
+        ctx.restore();
+      };
+
+      const drawFixture = (hangX, hangY, pose, s, rgb, power, face) => {
+        if (!face) {
+          ctx.save();
+          ctx.translate(hangX, hangY);
+          ctx.fillStyle = '#1c1c20';
+          roundRect(-18 * s, -54 * s, 36 * s, 10 * s, 2 * s);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = '#101012';
+          roundRect(-7 * s, -58 * s, 14 * s, 8 * s, 2 * s);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+
+          drawPanBase(pose, s);
+          drawYokeBridge(pose, s);
+          drawYokeArm(pose, pose.farArm, 0.18);
+          drawYokeArm(pose, pose.nearArm, 0.3);
+          drawHeadHousing(pose, s);
+          return;
+        }
+
+        ctx.save();
+        ctx.shadowColor = `rgba(211, 97, 43, ${0.55 + 0.25 * power})`;
+        ctx.shadowBlur = 10 * s;
+        ctx.beginPath();
+        pathRing(pose, 17.5, 17, false, true);
+        ctx.strokeStyle = `rgba(211, 97, 43, ${0.55 + 0.2 * power})`;
+        ctx.lineWidth = Math.max(1.2, 2 * s);
+        ctx.stroke();
+        ctx.restore();
+
+        const bubble = (lx, lz, r) => {
+          ctx.fillStyle = '#050506';
+          fillFaceCircle(pose, lx, lz, r + 0.85, 17.5);
+          ctx.fillStyle = chrome(0.08);
+          fillFaceCircle(pose, lx, lz, r + 0.45, 17.7);
+          const p = pose.head(lx, 18.4, lz);
+          const edge = pose.head(lx + r, 18.4, lz);
+          const rr = Math.max(2.4, Math.hypot(edge.x - p.x, edge.y - p.y));
+          const g = ctx.createRadialGradient(p.x - rr * 0.28, p.y - rr * 0.32, rr * 0.05, p.x, p.y, rr);
+          g.addColorStop(0, `rgba(255,255,255,${0.82 * power})`);
+          g.addColorStop(0.18, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.95)`);
+          g.addColorStop(0.62, `rgba(${Math.floor(rgb[0] * 0.55)},${Math.floor(rgb[1] * 0.55)},${Math.floor(rgb[2] * 0.55)},0.95)`);
+          g.addColorStop(1, `rgba(12,10,12,0.95)`);
+          ctx.fillStyle = g;
+          fillFaceCircle(pose, lx, lz, r, 18.35);
+          ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+          ctx.lineWidth = 0.9;
+          ctx.beginPath();
+          pathFaceCircle(pose, lx, lz, r, 18.35, true);
+          ctx.closePath();
+          ctx.stroke();
+          ctx.fillStyle = `rgba(255,255,255,${0.35 * power})`;
+          fillFaceCircle(pose, lx - r * 0.28, lz - r * 0.22, r * 0.22, 18.55);
+        };
+
+        bubble(0, 0, 5.15);
+        for (let i = 0; i < 6; i += 1) {
+          const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+          bubble(Math.cos(a) * 9.35, Math.sin(a) * 9.35, 5.05);
+        }
+      };
+
+      const frame = (now) => {
+        if (!running && !reduce) return;
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        time += reduce ? 0 : dt;
+        const tScroll = reduce ? 0.45 : progress();
+        idle = damp(idle, now - lastScrollAt > 160 ? 1 : 0, dt, 3.2);
+
+        ctx.clearRect(0, 0, width, height);
+
+        const margin = width * 0.12;
+        const span = width - margin * 2;
+        const s = Math.min(1.25, Math.max(0.82, width / 1200));
+        const originY = padTop + Math.max(58, 52 * s) - 50;
+        const call = btnAim(callBtn);
+        const offer = btnAim(offerBtn);
+        let aimX = width * (0.82 - tScroll * 0.7) + Math.sin(time * 0.32) * width * 0.05 * idle;
+        let aimY = height * (0.68 - tScroll * 0.08) + Math.cos(time * 0.26) * height * 0.035 * idle;
+        let followFocus = lerp(10, 1.4, idle);
+        if (call && tScroll < 0.14) {
+          const sweep = 0.5 + 0.5 * Math.sin(time * 0.42);
+          const u = sweep * sweep * (3 - 2 * sweep);
+          const target = offer && !reduce ? offer : call;
+          aimX = lerp(call.x, target.x, u);
+          aimY = lerp(call.y, target.y, u);
+          followFocus = 5.5;
+        }
+        if (!reduce && pointer.inside) {
+          aimX = pointer.x;
+          aimY = pointer.y;
+          followFocus = 18;
+        }
+        if (!focus.x || snapAim) {
+          focus.x = call ? call.x : aimX;
+          focus.y = call ? call.y : aimY;
+        }
+        focus.x = damp(focus.x, aimX, dt, followFocus);
+        focus.y = damp(focus.y, aimY, dt, followFocus);
+        const heads = [];
+
+        for (let i = 0; i < fixtures; i += 1) {
+          const u = fixtures === 1 ? 0.5 : i / (fixtures - 1);
+          const x = margin + span * u;
+          const dxAim = focus.x - x;
+          const dyAim = Math.max(36, focus.y - originY);
+          const dirY = dyAim / Math.hypot(dxAim, dyAim);
+          const lookTilt = Math.acos(Math.min(0.96, Math.max(0.28, dirY)));
+          const lookPan = Math.max(-1.15, Math.min(1.15, Math.atan2(-dxAim, dyAim)));
+          const m = motors[i];
+          const onCta = Boolean(call && tScroll < 0.14);
+          const follow = pointer.inside && !reduce ? 14 : onCta ? 6.2 : lerp(8.2, 1.2, idle);
+          if (snapAim) {
+            m.pan = lookPan;
+            m.tilt = lookTilt;
+          } else {
+            m.pan = damp(m.pan, lookPan, dt, follow);
+            m.tilt = damp(m.tilt, lookTilt, dt, follow * 1.1);
+          }
+          m.zoom = damp(m.zoom, 0.18 + tScroll * 0.2, dt, 3.2);
+          m.dim = damp(m.dim, 0.84 + 0.08 * Math.sin(time * 0.9 + i * 0.7), dt, 4);
+          const pose = poseOf(x, originY, m.pan, m.tilt, s);
+          const dx = focus.x - pose.lens.x;
+          const dy = focus.y - pose.lens.y;
+          heads.push({
+            x,
+            y: originY,
+            pose,
+            origin: pose.lens,
+            angle: Math.atan2(-dx, dy),
+            length: Math.max(48, Math.hypot(dx, dy)),
+            aperture: pose.aperture,
+            rgb: colors[i],
+            zoom: m.zoom,
+            dim: m.dim,
+            s,
+          });
+        }
+        if (snapAim && call) snapAim = false;
+
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#1a1a1d';
+        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+        ctx.lineWidth = 1;
+        roundRect(margin - 36, originY - 58, span + 72, 14, 3);
+        ctx.fill();
+        ctx.stroke();
+
+        heads.forEach((h) => drawFixture(h.x, h.y, h.pose, h.s, h.rgb, h.dim, false));
+        heads.forEach((h) => {
+          drawBeam(h.origin.x, h.origin.y, h.angle, h.length, h.aperture, 8 + h.zoom * 10, h.rgb, h.dim);
+        });
+        drawFlare(focus.x, focus.y, [255, 186, 140], 0.55, 22 + 8 * (1 - idle));
+        ctx.globalCompositeOperation = 'source-over';
+        heads.forEach((h) => {
+          drawFlare(h.origin.x, h.origin.y, h.rgb, h.dim, h.aperture);
+          drawFixture(h.x, h.y, h.pose, h.s, h.rgb, h.dim, true);
+          drawYokeArm(h.pose, h.pose.nearArm, 0.38);
+          drawFlare(h.origin.x, h.origin.y, h.rgb, h.dim * 0.55, h.aperture * 0.72);
+        });
+
+        dust.forEach((p) => {
+          p.y += p.s * dt * 0.045;
+          if (p.y > 1) p.y = 0;
+          let glow = 0.03;
+          heads.forEach((h) => {
+            const dx = p.x * width - h.origin.x;
+            const dy = p.y * height - h.origin.y;
+            const ca = Math.cos(h.angle);
+            const sa = Math.sin(h.angle);
+            const along = -dx * sa + dy * ca;
+            const across = dx * ca + dy * sa;
+            const spread = 10 + along * 0.02;
+            if (along > 8 && along < height && Math.abs(across) < spread) {
+              glow += h.dim * 0.12 * (1 - Math.abs(across) / spread);
+            }
+          });
+          ctx.fillStyle = `rgba(255,255,255,${Math.min(0.22, glow)})`;
+          ctx.beginPath();
+          ctx.arc(p.x * width, p.y * height, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        if (!reduce) requestAnimationFrame(frame);
+      };
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          running = entries.some((e) => e.isIntersecting);
+          if (running) {
+            last = performance.now();
+            requestAnimationFrame(frame);
+          }
+        },
+        { threshold: 0.02 },
+      );
+
+      resize();
+      io.observe(section);
+      window.addEventListener('resize', resize, { passive: true });
+      const host = section.closest('.stage-hero') || section;
+      const setPointer = (event) => {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width < 1 || rect.height < 1) return;
+        pointer.x = ((event.clientX - rect.left) / rect.width) * width;
+        pointer.y = ((event.clientY - rect.top) / rect.height) * height;
+        pointer.inside =
+          event.clientX >= rect.left &&
+          event.clientX <= rect.right &&
+          event.clientY >= rect.top &&
+          event.clientY <= rect.bottom;
+      };
+      host.addEventListener('pointermove', setPointer, { passive: true });
+      host.addEventListener(
+        'pointerleave',
+        () => {
+          pointer.inside = false;
+        },
+        { passive: true },
+      );
+      window.addEventListener(
+        'scroll',
+        () => {
+          lastScrollAt = performance.now();
+        },
+        { passive: true },
+      );
+      if (reduce) requestAnimationFrame(frame);
+    }
+  }
+</script>

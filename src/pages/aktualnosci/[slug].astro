@@ -1,0 +1,55 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('aktualnosci');
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<Base
+  title={post.data.title}
+  seoTitle={post.data.seoTitle}
+  description={post.data.seoDescription || post.data.description}
+  image={post.data.image}
+  breadcrumbs={[
+    { name: 'Strona główna', href: '/' },
+    { name: 'Aktualności', href: '/aktualnosci/' },
+    { name: post.data.title, href: `/aktualnosci/${post.id}/` },
+  ]}
+>
+  <article>
+    <section class="page-hero">
+      <div class="wrap">
+        <p>
+          <time datetime={post.data.date.toISOString()}>{post.data.date.toLocaleDateString('pl-PL')}</time>
+        </p>
+        <h1>{post.data.title}</h1>
+      </div>
+    </section>
+    <section class="section" style="padding-top: 0;">
+      <div class="wrap">
+        {
+          post.data.image && (
+            <p>
+              <img
+                src={post.data.image}
+                alt={post.data.title}
+                width="1200"
+                height="640"
+                style="width:100%;max-height:22rem;object-fit:cover;border-radius:var(--radius);"
+              />
+            </p>
+          )
+        }
+        <div class="prose">
+          <Content />
+        </div>
+      </div>
+    </section>
+  </article>
+</Base>

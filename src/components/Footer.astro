@@ -1,0 +1,68 @@
+---
+import { site } from '../lib/site';
+import seo from '../data/seo.json';
+import Nap from './Nap.astro';
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div class="footer-col">
+      <p class="footer-heading">{site.shortName}</p>
+      <p>
+        Nagłośnienie, oświetlenie i scena na eventy w Poznaniu. Realizacja dźwięku i światła,
+        technika estradowa oraz obsługa techniczna imprez w Wielkopolsce i w całej Polsce.
+      </p>
+      <Nap />
+    </div>
+    <div class="footer-col">
+      <p class="footer-heading">Usługi</p>
+      <ul class="footer-list">
+        {seo.services.map((service) => (
+          <li>
+            <a href={service.url}>{service.name}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+    <div class="footer-col">
+      <p class="footer-heading">Kontakt</p>
+      <ul class="footer-list">
+        <li>
+          <a href={`tel:${site.phonePrimary}`}>{site.phonePrimaryLabel}</a>
+        </li>
+        <li>
+          <a href={`mailto:${site.email}`}>{site.email}</a>
+        </li>
+      </ul>
+      <p>Poznań, Luboń, Swarzędz, Suchy Las, Tarnowo Podgórne i cała Wielkopolska.</p>
+    </div>
+    <div class="footer-col">
+      <p class="footer-heading">Menu</p>
+      <ul class="footer-list">
+        <li>
+          <a href="/#oferta">Oferta</a>
+        </li>
+        <li>
+          <a href="/realizacje/">Realizacje</a>
+        </li>
+        <li>
+          <a href="/#kontakt">Kontakt</a>
+        </li>
+        <li>
+          <a href="/cookies/">Polityka cookies</a>
+        </li>
+        <li>
+          <button type="button" class="footer-text-btn" data-open-cookies>Ustawienia cookies</button>
+        </li>
+        <li>
+          <a href={site.facebook} rel="noopener noreferrer">Facebook</a>
+        </li>
+        <li>
+          <a href={site.instagram} rel="noopener noreferrer">Instagram</a>
+        </li>
+      </ul>
+      <p>© {year} {site.shortName}</p>
+    </div>
+  </div>
+</footer>

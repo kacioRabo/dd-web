@@ -1,0 +1,23 @@
+---
+interface Props {
+  href: string;
+  title: string;
+  image: string;
+  excerpt: string;
+  city: string;
+  eventType: string;
+  date: Date;
+}
+
+const { href, title, image, excerpt, city, eventType, date } = Astro.props;
+---
+
+<a class="news-card" href={href}>
+  <img src={image} alt={`${title} — ${city}`} width="640" height="320" loading="lazy" />
+  <div>
+    <p class="case-meta">{city} · {eventType}</p>
+    <time datetime={date.toISOString()}>{date.toLocaleDateString('pl-PL')}</time>
+    <h3>{title}</h3>
+    <p>{excerpt}</p>
+  </div>
+</a>

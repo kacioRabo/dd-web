@@ -1,0 +1,138 @@
+backend:
+  name: git-gateway
+  branch: main
+local_backend:
+  url: http://localhost:8081/api/v1
+  allowed_hosts: ['localhost', '127.0.0.1']
+site_url: https://dobrydzwiek.pl
+display_url: https://dobrydzwiek.pl
+logo_url: /logo.png
+locale: pl
+media_folder: public/images/uploads
+public_folder: /images/uploads
+
+collections:
+  - name: pages
+    label: Strony
+    folder: src/content/pages
+    create: false
+    slug: '{{slug}}'
+    extension: md
+    format: frontmatter
+    fields:
+      - { label: Tytuł, name: title, widget: string }
+      - { label: Opis SEO, name: description, widget: text }
+      - { label: Tytuł SEO, name: seoTitle, widget: string, required: false }
+      - { label: Treść, name: body, widget: markdown }
+
+  - name: oferta
+    label: Oferta
+    folder: src/content/oferta
+    create: true
+    slug: '{{slug}}'
+    extension: md
+    format: frontmatter
+    fields:
+      - { label: Tytuł, name: title, widget: string }
+      - { label: Tytuł na kafelku, name: cardTitle, widget: string }
+      - { label: Opis SEO, name: description, widget: text }
+      - { label: Tytuł SEO, name: seoTitle, widget: string, required: false }
+      - { label: Kolejność, name: order, widget: number, value_type: int }
+      - { label: Na stronie głównej, name: featured, widget: boolean, default: false }
+      - { label: Zdjęcie, name: image, widget: image }
+      - { label: Treść, name: body, widget: markdown }
+
+  - name: aktualnosci
+    label: Aktualności
+    folder: src/content/aktualnosci
+    create: true
+    slug: '{{slug}}'
+    extension: md
+    format: frontmatter
+    fields:
+      - { label: Tytuł, name: title, widget: string }
+      - { label: Opis SEO, name: description, widget: text }
+      - { label: Tytuł SEO, name: seoTitle, widget: string, required: false }
+      - { label: Data, name: date, widget: datetime, date_format: YYYY-MM-DD, time_format: false }
+      - { label: Zajawka, name: excerpt, widget: text }
+      - { label: Zdjęcie, name: image, widget: image, required: false }
+      - { label: Treść, name: body, widget: markdown }
+
+  - name: realizacje
+    label: Realizacje
+    folder: src/content/realizacje
+    create: true
+    slug: '{{slug}}'
+    extension: md
+    format: frontmatter
+    fields:
+      - { label: Tytuł, name: title, widget: string }
+      - { label: Opis SEO, name: description, widget: text }
+      - { label: Tytuł SEO, name: seoTitle, widget: string, required: false }
+      - { label: Data, name: date, widget: datetime, date_format: YYYY-MM-DD, time_format: false }
+      - { label: Miasto, name: city, widget: string }
+      - { label: Typ wydarzenia, name: eventType, widget: string }
+      - { label: Zakres, name: services, widget: list }
+      - { label: Zajawka, name: excerpt, widget: text }
+      - { label: Zdjęcie, name: image, widget: image }
+      - { label: Powiązana oferta (slug), name: relatedOffer, widget: string, required: false }
+      - { label: Treść, name: body, widget: markdown }
+
+  - name: settings
+    label: Ustawienia strony
+    files:
+      - name: site
+        label: Dane firmy
+        file: src/data/site.json
+        fields:
+          - { label: Nazwa, name: name, widget: string }
+          - { label: Krótka nazwa, name: shortName, widget: string }
+          - { label: Hasło, name: tagline, widget: string }
+          - { label: Adres URL, name: url, widget: string }
+          - { label: E-mail, name: email, widget: string }
+          - { label: Facebook, name: facebook, widget: string }
+          - { label: Instagram, name: instagram, widget: string }
+          - { label: PITE, name: pite, widget: string }
+          - { label: GA4 (np. G-XXXX), name: ga4, widget: string, required: false }
+          - { label: Telefon (tel:), name: phonePrimary, widget: string }
+          - { label: Telefon (widoczny), name: phonePrimaryLabel, widget: string }
+          - { label: Osoba do telefonu, name: phonePrimaryPerson, widget: string }
+          - label: Adres
+            name: address
+            widget: object
+            fields:
+              - { label: Ulica, name: street, widget: string }
+              - { label: Kod, name: postal, widget: string }
+              - { label: Miasto, name: city, widget: string }
+              - { label: Kraj, name: country, widget: string }
+          - label: Geo
+            name: geo
+            widget: object
+            fields:
+              - { label: Szerokość, name: lat, widget: number, value_type: float }
+              - { label: Długość, name: lng, widget: number, value_type: float }
+          - label: Dane rejestrowe
+            name: legal
+            widget: object
+            fields:
+              - { label: Właściciel, name: owner, widget: string }
+              - { label: Firma, name: company, widget: string }
+              - { label: NIP, name: nip, widget: string }
+              - { label: REGON, name: regon, widget: string }
+          - { label: Mapa (iframe src), name: mapEmbed, widget: text }
+          - { label: Profil Google Maps, name: googleMaps, widget: string }
+          - label: Osoby
+            name: people
+            widget: list
+            fields:
+              - { label: Imię i nazwisko, name: name, widget: string }
+              - { label: Rola, name: role, widget: string }
+              - { label: Telefon (tel:), name: phone, widget: string }
+              - { label: Telefon (widoczny), name: phoneLabel, widget: string }
+          - { label: Agencje, name: agencies, widget: list }
+          - label: Logotypy klientów
+            name: clients
+            widget: list
+            fields:
+              - { label: Nazwa, name: name, widget: string }
+              - { label: Plik, name: src, widget: image }

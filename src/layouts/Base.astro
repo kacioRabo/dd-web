@@ -1,0 +1,186 @@
+---
+import '@fontsource-variable/source-sans-3/wght.css';
+import '../styles/global.css';
+import { site, pageTitle, canonical, jsonLdText } from '../lib/site';
+import seo from '../data/seo.json';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import CookieBanner from '../components/CookieBanner.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  seoTitle?: string;
+  image?: string;
+  breadcrumbs?: { name: string; href: string }[];
+  faq?: { question: string; answer: string }[];
+  extraJsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const { title, description, seoTitle, image = '/og-default.png', breadcrumbs, faq, extraJsonLd } = Astro.props;
+const fullTitle = pageTitle(seoTitle, title);
+const url = canonical(Astro.url.pathname);
+const ogImage = new URL(image, site.url).href;
+const businessId = `${site.url}/#business`;
+const websiteId = `${site.url}/#website`;
+const extraGraph = extraJsonLd ? (Array.isArray(extraJsonLd) ? extraJsonLd : [extraJsonLd]) : [];
+const mapsUrl = site.googleMaps || seo.googleMaps;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': ['LocalBusiness', 'ProfessionalService'],
+      '@id': businessId,
+      name: site.name,
+      legalName: site.legal.company,
+      description:
+        'Nagłośnienie, oświetlenie i scena na eventy w Poznaniu. Realizacja dźwięku i światła, technika estradowa, technika eventowa oraz obsługa techniczna imprez.',
+      url: site.url,
+      email: site.email,
+      telephone: site.phonePrimary,
+      image: new URL('/logo.png', site.url).href,
+      priceRange: '$$',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: site.address.street,
+        postalCode: site.address.postal,
+        addressLocality: site.address.city,
+        addressCountry: site.address.country,
+      },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: site.geo.lat,
+        longitude: site.geo.lng,
+      },
+      hasMap: mapsUrl,
+      sameAs: [site.facebook, site.instagram, mapsUrl].filter(Boolean),
+      areaServed: [
+        ...seo.areaServed.map((name) => ({
+          '@type': name === 'Wielkopolska' ? 'AdministrativeArea' : 'City',
+          name,
+        })),
+        { '@type': 'Country', name: 'Polska' },
+      ],
+      knowsAbout: seo.knowsAbout,
+      hasOfferCatalog: {
+        '@type': 'OfferCatalog',
+        name: 'Technika eventowa i estradowa',
+        itemListElement: seo.services.map((service) => ({
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: service.name,
+            url: new URL(service.url, site.url).href,
+            areaServed: 'Poznań',
+            provider: { '@id': businessId },
+          },
+        })),
+      },
+    },
+    {
+      '@type': 'WebSite',
+      '@id': websiteId,
+      url: site.url,
+      name: site.name,
+      inLanguage: 'pl-PL',
+      publisher: { '@id': businessId },
+    },
+    {
+      '@type': 'WebPage',
+      '@id': `${url}#webpage`,
+      url,
+      name: fullTitle,
+      description,
+      isPartOf: { '@id': websiteId },
+      about: { '@id': businessId },
+      inLanguage: 'pl-PL',
+    },
+    ...(breadcrumbs?.length
+      ? [
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: breadcrumbs.map((crumb, index) => ({
+              '@type': 'ListItem',
+              position: index + 1,
+              name: crumb.name,
+              item: canonical(crumb.href),
+            })),
+          },
+        ]
+      : []),
+    ...(faq?.length
+      ? [
+          {
+            '@type': 'FAQPage',
+            mainEntity: faq.map((item) => ({
+              '@type': 'Question',
+              name: item.question,
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: item.answer,
+              },
+            })),
+          },
+        ]
+      : []),
+    ...extraGraph,
+  ],
+};
+---
+
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={url} />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="theme-color" content="#d3612b" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pl_PL" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={url} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <script type="application/ld+json" set:html={jsonLdText(jsonLd)} />
+  </head>
+  <body>
+    <div class="page">
+      <a class="skip-link" href="#tresc">Przejdź do treści</a>
+      <Header />
+      <main id="tresc">
+        {
+          breadcrumbs && breadcrumbs.length > 1 && (
+            <nav class="breadcrumbs wrap" aria-label="Okruszki">
+              <ol>
+                {breadcrumbs.map((crumb, index) => (
+                  <li>
+                    {index < breadcrumbs.length - 1 ? (
+                      <a href={crumb.href}>{crumb.name}</a>
+                    ) : (
+                      <span aria-current="page">{crumb.name}</span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )
+        }
+        <slot />
+      </main>
+      <Footer />
+      <a class="call-bar" href={`tel:${site.phonePrimary}`}>
+        Zadzwoń {site.phonePrimaryLabel}
+      </a>
+      <CookieBanner />
+    </div>
+  </body>
+</html>

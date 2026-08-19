@@ -1,0 +1,110 @@
+---
+import { site } from '../lib/site';
+---
+
+<div class="cookie-banner" id="cookie-banner" hidden>
+  <p>
+    {
+      site.ga4
+        ? 'Używamy niezbędnych plików cookie, żeby strona działała. Statystyki (Google Analytics) włączamy tylko za Twoją zgodą.'
+        : 'Ta strona używa niezbędnych plików cookie, żeby zapamiętać Twoje ustawienia.'
+    }
+    Szczegóły: <a href="/cookies/">polityka cookies</a>.
+  </p>
+  <div class="cookie-actions">
+    {
+      site.ga4 ? (
+        <button type="button" class="btn btn-primary" data-consent="analytics">
+          Akceptuję analitykę
+        </button>
+      ) : null
+    }
+    <button type="button" class="btn btn-ghost" data-consent="necessary">Tylko niezbędne</button>
+  </div>
+</div>
+
+<script is:inline define:vars={{ ga4: site.ga4 }}>
+  const KEY = 'dd-consent';
+  const MAX_AGE = 60 * 60 * 24 * 365;
+  const banner = document.getElementById('cookie-banner');
+
+  function readCookie(name) {
+    const prefix = name + '=';
+    const parts = document.cookie.split(';');
+    for (let i = 0; i < parts.length; i += 1) {
+      const part = parts[i].trim();
+      if (part.indexOf(prefix) === 0) return decodeURIComponent(part.slice(prefix.length));
+    }
+    return '';
+  }
+
+  function writeCookie(name, value) {
+    const secure = location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie =
+      name + '=' + encodeURIComponent(value) + '; Path=/; Max-Age=' + MAX_AGE + '; SameSite=Lax' + secure;
+  }
+
+  function getConsent() {
+    return readCookie(KEY) || localStorage.getItem(KEY) || '';
+  }
+
+  function setConsent(value) {
+    writeCookie(KEY, value);
+    try {
+      localStorage.setItem(KEY, value);
+    } catch (err) {
+      /* ignore quota / private mode */
+    }
+  }
+
+  function loadGa() {
+    if (!ga4) return;
+    if (document.getElementById('ga4')) return;
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      window.dataLayer.push(arguments);
+    }
+    window.gtag = gtag;
+    gtag('consent', 'default', {
+      analytics_storage: 'granted',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+    });
+    const s = document.createElement('script');
+    s.id = 'ga4';
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ga4;
+    document.head.appendChild(s);
+    gtag('js', new Date());
+    gtag('config', ga4, { anonymize_ip: true });
+  }
+
+  function apply(value) {
+    if (value === 'analytics') loadGa();
+  }
+
+  const saved = getConsent();
+  if (saved === 'analytics' || saved === 'necessary') {
+    apply(saved);
+  } else if (banner) {
+    banner.hidden = false;
+  }
+
+  banner?.querySelectorAll('[data-consent]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const value = btn.getAttribute('data-consent');
+      if (!value) return;
+      setConsent(value);
+      banner.hidden = true;
+      apply(value);
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || !target.closest('[data-open-cookies]')) return;
+    event.preventDefault();
+    if (banner) banner.hidden = false;
+  });
+</script>

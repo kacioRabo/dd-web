@@ -1,0 +1,15 @@
+---
+import FacebookFeed from './FacebookFeed.astro';
+import InstagramFeed from './InstagramFeed.astro';
+
+interface Props {
+  height?: number;
+}
+
+const { height = 680 } = Astro.props;
+---
+
+<div class="social-feeds">
+  <FacebookFeed height={height} />
+  <InstagramFeed height={height} />
+</div>

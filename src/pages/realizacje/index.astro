@@ -1,0 +1,50 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import RealizationCard from '../../components/RealizationCard.astro';
+
+const page = await getEntry('pages', 'realizacje');
+if (!page) throw new Error('Brak treści realizacji');
+const { Content } = await render(page);
+const items = (await getCollection('realizacje')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<Base
+  title={page.data.title}
+  seoTitle={page.data.seoTitle}
+  description={page.data.description}
+  breadcrumbs={[
+    { name: 'Strona główna', href: '/' },
+    { name: 'Realizacje', href: '/realizacje/' },
+  ]}
+>
+  <section class="page-hero">
+    <div class="wrap">
+      <h1>{page.data.title}</h1>
+    </div>
+  </section>
+  <section class="section" style="padding-top: 0;">
+    <div class="wrap">
+      <div class="prose">
+        <Content />
+      </div>
+      <div class="grid news-grid" style="margin-top: 1.5rem;">
+        {
+          items.map((item) => (
+            <RealizationCard
+              href={`/realizacje/${item.id}/`}
+              title={item.data.title}
+              image={item.data.image}
+              excerpt={item.data.excerpt}
+              city={item.data.city}
+              eventType={item.data.eventType}
+              date={item.data.date}
+            />
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Base>

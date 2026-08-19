@@ -1,0 +1,83 @@
+{
+  "name": "Dobry Dźwięk Technika Eventowa",
+  "shortName": "Dobry Dźwięk",
+  "tagline": "Nagłośnienie, oświetlenie i scena — technika eventowa z Poznania.",
+  "url": "https://dobrydzwiek.pl",
+  "email": "biuro@dobrydzwiek.pl",
+  "facebook": "https://www.facebook.com/dobrydzwiek",
+  "instagram": "https://www.instagram.com/dobry_dzwiek_te/",
+  "pite": "https://www.pite.org.pl",
+  "ga4": "",
+  "phonePrimary": "+48505774682",
+  "phonePrimaryLabel": "+48 505 774 682",
+  "phonePrimaryPerson": "Adam Majewski",
+  "address": {
+    "street": "ul. Oświęcimska 89",
+    "postal": "61-343",
+    "city": "Poznań",
+    "country": "PL"
+  },
+  "geo": {
+    "lat": 52.3474217,
+    "lng": 16.9210808
+  },
+  "legal": {
+    "owner": "Mateusz Kuźniarek",
+    "company": "Dobry Dźwięk Technika Eventowa Mateusz Kuźniarek",
+    "nip": "777-28-54-071",
+    "regon": "301261673"
+  },
+  "mapEmbed": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2437.268151486395!2d16.91889201610807!3d52.34742165675651!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47045a8325f945d7%3A0x6a1922cd5151d457!2sDobry+D%C5%BAwi%C4%99k+Technika+Eventowa!5e0!3m2!1spl!2spl!4v1537786660503",
+  "googleMaps": "https://www.google.com/maps/place/Dobry+D%C5%BAwi%C4%99k+Technika+Eventowa/@52.3474217,16.9210808,17z",
+  "people": [
+    {
+      "name": "Adam Majewski",
+      "role": "Oferty, wyceny, konsultacja techniczna",
+      "phone": "+48505774682",
+      "phoneLabel": "+48 505 774 682"
+    },
+    {
+      "name": "Sebastian Szczerbiak",
+      "role": "Oferty, wyceny",
+      "phone": "+48508818202",
+      "phoneLabel": "+48 508 818 202"
+    },
+    {
+      "name": "Monika Wojtyniak",
+      "role": "Marketing",
+      "phone": "+48519187024",
+      "phoneLabel": "+48 519 187 024"
+    },
+    {
+      "name": "Mateusz Kuźniarek",
+      "role": "Konsultacja techniczna",
+      "phone": "+48697909163",
+      "phoneLabel": "+48 697 909 163"
+    }
+  ],
+  "agencies": [
+    "Kabaret HRABI",
+    "Flowevents",
+    "GPD Agency",
+    ".Nowoczesna",
+    "AudioFeels",
+    "City Park",
+    "Piaf Group",
+    "FXEvents"
+  ],
+  "clients": [
+    { "name": "Audi", "src": "/images/klienci/Audi.png" },
+    { "name": "BMW", "src": "/images/klienci/bmw_logo.png" },
+    { "name": "Mercedes-Benz", "src": "/images/klienci/mercedes_benz_logo.png" },
+    { "name": "Toyota", "src": "/images/klienci/Toyota_Logo.png" },
+    { "name": "Volkswagen", "src": "/images/klienci/Volkswagen_Logo.png" },
+    { "name": "Samsung", "src": "/images/klienci/samsung_logo.png" },
+    { "name": "TVN", "src": "/images/klienci/logo_TVN.png" },
+    { "name": "Eurocash", "src": "/images/klienci/Eurocash.png" },
+    { "name": "Santander / WBK", "src": "/images/klienci/WBK_logo.png" },
+    { "name": "W.Kruk", "src": "/images/klienci/w.kruk.png" },
+    { "name": "Stalgast", "src": "/images/klienci/Stalgast.png" },
+    { "name": "CKM", "src": "/images/klienci/CKM.png" },
+    { "name": "Browary", "src": "/images/klienci/browary.jpg" }
+  ]
+}

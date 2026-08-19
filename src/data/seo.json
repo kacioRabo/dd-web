@@ -1,0 +1,78 @@
+{
+  "googleMaps": "https://www.google.com/maps/place/Dobry+D%C5%BAwi%C4%99k+Technika+Eventowa/@52.3474217,16.9210808,17z",
+  "areaServed": [
+    "Poznań",
+    "Luboń",
+    "Swarzędz",
+    "Suchy Las",
+    "Tarnowo Podgórne",
+    "Wielkopolska"
+  ],
+  "knowsAbout": [
+    "nagłośnienie",
+    "oświetlenie",
+    "scena",
+    "event",
+    "realizacja dźwięku",
+    "realizacja światła",
+    "technika estradowa",
+    "technika eventowa",
+    "obsługa techniczna",
+    "wynajem nagłośnienia",
+    "wynajem oświetlenia",
+    "wynajem sceny",
+    "line array",
+    "efekty sceniczne",
+    "live streaming",
+    "rider techniczny",
+    "nagłośnienie konferencji"
+  ],
+  "services": [
+    {
+      "name": "Nagłośnienie i realizacja dźwięku",
+      "url": "/imprezy-plenerowe-i-klubowe/"
+    },
+    {
+      "name": "Oświetlenie i realizacja światła",
+      "url": "/oswietlenie-architektoniczne/"
+    },
+    {
+      "name": "Scena i konstrukcje sceniczne",
+      "url": "/konstrukcje-sceniczne/"
+    },
+    {
+      "name": "Obsługa techniczna eventów",
+      "url": "/targi-konferencje-eventy-firmowe/"
+    },
+    {
+      "name": "Wynajem sprzętu i technika estradowa",
+      "url": "/rental-i-obsluga/"
+    }
+  ],
+  "faq": [
+    {
+      "question": "Czy zapewniacie nagłośnienie i oświetlenie eventów w Poznaniu?",
+      "answer": "Tak. Dobry Dźwięk to technika eventowa z Poznania: nagłośnienie, oświetlenie, scena oraz obsługa techniczna koncertów, imprez i eventów firmowych. Pracujemy w Poznaniu, w Wielkopolsce i w całej Polsce."
+    },
+    {
+      "question": "Co obejmuje obsługa techniczna imprezy?",
+      "answer": "Kompleksowa obsługa techniczna to realizacja dźwięku, realizacja światła, budowa sceny i konstrukcji, montaż sprzętu oraz ekipa techników na miejscu. Możemy wziąć na siebie całość albo wybrany zakres — na przykład samo nagłośnienie albo samo oświetlenie."
+    },
+    {
+      "question": "Czy mogę wynająć tylko sprzęt, bez ekipy?",
+      "answer": "Tak. Oprócz pełnej obsługi prowadzimy wynajem nagłośnienia, oświetlenia i konstrukcji scenicznych, w tym systemów line array. Przy większych eventach polecamy jednak realizację z naszym zespołem — rider techniczny, montaż i praca live są wtedy spójne."
+    },
+    {
+      "question": "Czy budujecie scenę i konstrukcje sceniczne?",
+      "answer": "Tak. W ofercie są podesty, sceny, zadaszenia i konstrukcje aluminiowe. Scena, nagłośnienie i oświetlenie mogą iść w jednym pakiecie, żeby technika estradowa na evencie była spójna."
+    },
+    {
+      "question": "Na jakim terenie działacie?",
+      "answer": "Siedziba i magazyn: ul. Oświęcimska 89, 61-343 Poznań. Obsługujemy Poznań, Luboń, Swarzędz, Suchy Las, Tarnowo Podgórne i całą Wielkopolskę, a także wyjazdy w Polsce — konferencje, targi, koncerty i imprezy plenerowe."
+    },
+    {
+      "question": "Czy robicie nagłośnienie konferencji i live streaming?",
+      "answer": "Tak. Obsługujemy nagłośnienie konferencji i eventów firmowych w Poznaniu, a w Domu Dobrego Dźwięku także produkcję audio-wideo i live streaming. Do tego instalacje AV na event i na stałe."
+    }
+  ]
+}

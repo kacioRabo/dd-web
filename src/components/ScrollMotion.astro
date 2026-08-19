@@ -1,0 +1,48 @@
+---
+---
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) {
+    const parallax = [...document.querySelectorAll<HTMLElement>('[data-parallax]')];
+    const reveals = [...document.querySelectorAll('.reveal')];
+    const zooms = [...document.querySelectorAll('.feature-media img')];
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) entry.target.classList.add('is-in');
+        });
+      },
+      { threshold: 0.16, rootMargin: '0px 0px -8% 0px' },
+    );
+    reveals.forEach((el) => io.observe(el));
+
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const vh = window.innerHeight;
+      parallax.forEach((el) => {
+        const speed = Number(el.dataset.parallax) || 0.16;
+        const rect = el.getBoundingClientRect();
+        const p = (rect.top + rect.height / 2 - vh / 2) / vh;
+        el.style.transform = `translate3d(0, ${(-p * speed * 90).toFixed(1)}px, 0)`;
+      });
+      zooms.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const p = Math.min(1, Math.max(0, 1 - rect.top / vh));
+        const scale = 1.12 - p * 0.12;
+        el.style.transform = `scale(${scale.toFixed(3)})`;
+      });
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    update();
+  }
+</script>
