@@ -1,7 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import { site, canonical } from '../../lib/site';
+import { site, canonical, withBase } from '../../lib/site';
 
 export async function getStaticPaths() {
   const items = await getCollection('realizacje');
@@ -56,7 +56,7 @@ const extraJsonLd = {
       <div class="wrap">
         <p>
           <img
-            src={item.data.image}
+            src={withBase(item.data.image)}
             alt={`${item.data.title} — ${item.data.city}`}
             width="1200"
             height="640"
@@ -73,12 +73,12 @@ const extraJsonLd = {
           <a class="btn btn-primary" href={`tel:${site.phonePrimary}`}>Zapytaj o wycenę</a>
           {
             item.data.relatedOffer && (
-              <a class="btn btn-ghost" href={`/${item.data.relatedOffer}/`} style="margin-left: 0.5rem;">
+              <a class="btn btn-ghost" href={withBase(`/${item.data.relatedOffer}/`)} style="margin-left: 0.5rem;">
                 Zobacz ofertę
               </a>
             )
           }
-          <a class="btn btn-ghost" href="/realizacje/" style="margin-left: 0.5rem;">Wszystkie realizacje</a>
+          <a class="btn btn-ghost" href={withBase('/realizacje/')} style="margin-left: 0.5rem;">Wszystkie realizacje</a>
         </p>
       </div>
     </section>

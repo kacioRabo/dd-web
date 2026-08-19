@@ -9,7 +9,9 @@ npm run dev
 
 Edycja treści w przeglądarce (lokalnie): w drugim terminalu `npm run cms`, potem otwórz `/admin/`.
 
-Build: `npm run build` → katalog `dist/`. Hosting: Cloudflare Pages lub Netlify (`publish: dist`). Po publikacji włącz Git Gateway / OAuth, wpisz ID GA4 w ustawieniach CMS.
+Build: `npm run build` → katalog `dist/`. Hosting: GitHub Pages, Cloudflare Pages lub Netlify (`publish: dist`). Po publikacji włącz Git Gateway / OAuth, wpisz ID GA4 w ustawieniach CMS.
+
+GitHub Pages publikuje się automatycznie z `main` (Actions → Deploy to GitHub Pages) pod [https://kaciorabo.github.io/dd-web/](https://kaciorabo.github.io/dd-web/). W **Settings → Pages** ustaw Source na **GitHub Actions**.
 
 ## Docker
 

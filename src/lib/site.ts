@@ -23,6 +23,15 @@ export const site = {
   googleMaps: httpsUrl(siteJson.googleMaps, ['www.google.com', 'maps.google.com']),
 };
 
+export function withBase(path = '/') {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(path) || path.startsWith('//')) return path;
+  const base = import.meta.env.BASE_URL || '/';
+  const prefix = base.endsWith('/') ? base.slice(0, -1) : base;
+  if (path === '/' || path === '') return `${prefix}/`;
+  if (prefix && (path === prefix || path.startsWith(`${prefix}/`))) return path;
+  return `${prefix}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 export function pageTitle(seoTitle: string | undefined, title: string) {
   const label = seoTitle || title;
   if (label.includes('Dobry Dźwięk')) return label;
@@ -30,8 +39,9 @@ export function pageTitle(seoTitle: string | undefined, title: string) {
 }
 
 export function canonical(pathname: string) {
-  const path = pathname.endsWith('/') ? pathname : `${pathname}/`;
-  return new URL(path, site.url).href;
+  const origin = import.meta.env.SITE || site.url;
+  const path = pathname.endsWith('/') || pathname.includes('#') || pathname.includes('?') ? pathname : `${pathname}/`;
+  return new URL(withBase(path), origin).href;
 }
 
 /** Safe for inline JSON-LD: JSON.stringify does not escape `<`. */

@@ -1,7 +1,7 @@
 ---
 import '@fontsource-variable/source-sans-3/wght.css';
 import '../styles/global.css';
-import { site, pageTitle, canonical, jsonLdText } from '../lib/site';
+import { site, pageTitle, canonical, jsonLdText, withBase } from '../lib/site';
 import seo from '../data/seo.json';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -20,7 +20,7 @@ interface Props {
 const { title, description, seoTitle, image = '/og-default.png', breadcrumbs, faq, extraJsonLd } = Astro.props;
 const fullTitle = pageTitle(seoTitle, title);
 const url = canonical(Astro.url.pathname);
-const ogImage = new URL(image, site.url).href;
+const ogImage = new URL(withBase(image), Astro.site ?? site.url).href;
 const businessId = `${site.url}/#business`;
 const websiteId = `${site.url}/#website`;
 const extraGraph = extraJsonLd ? (Array.isArray(extraJsonLd) ? extraJsonLd : [extraJsonLd]) : [];
@@ -137,7 +137,7 @@ const jsonLd = {
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={url} />
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="icon" type="image/png" href={withBase('/favicon.png')} />
     <meta name="theme-color" content="#d3612b" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pl_PL" />
@@ -164,7 +164,7 @@ const jsonLd = {
                 {breadcrumbs.map((crumb, index) => (
                   <li>
                     {index < breadcrumbs.length - 1 ? (
-                      <a href={crumb.href}>{crumb.name}</a>
+                      <a href={withBase(crumb.href)}>{crumb.name}</a>
                     ) : (
                       <span aria-current="page">{crumb.name}</span>
                     )}

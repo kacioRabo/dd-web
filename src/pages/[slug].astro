@@ -1,7 +1,7 @@
 ---
 import { getCollection, getEntry, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import { site } from '../lib/site';
+import { site, withBase } from '../lib/site';
 import Nap from '../components/Nap.astro';
 
 export async function getStaticPaths() {
@@ -61,7 +61,7 @@ const breadcrumbs =
       {
         image && (
           <p>
-            <img src={image} alt={data.title} width="1200" height="640" style="width:100%;max-height:22rem;object-fit:cover;border-radius:var(--radius);" />
+            <img src={withBase(image)} alt={data.title} width="1200" height="640" style="width:100%;max-height:22rem;object-fit:cover;border-radius:var(--radius);" />
           </p>
         )
       }
@@ -75,7 +75,7 @@ const breadcrumbs =
             <div class="logos" style="margin-top: 2rem;">
               {site.clients.map((client) => (
                 <figure>
-                  <img src={client.src} alt={client.name} width="160" height="80" loading="lazy" />
+                  <img src={withBase(client.src)} alt={client.name} width="160" height="80" loading="lazy" />
                 </figure>
               ))}
             </div>
@@ -150,10 +150,10 @@ const breadcrumbs =
             <a class="btn btn-primary" href={`tel:${site.phonePrimary}`}>
               Zapytaj o wycenę
             </a>
-            <a class="btn btn-ghost" href="/oferta/" style="margin-left: 0.5rem;">
+            <a class="btn btn-ghost" href={withBase('/oferta/')} style="margin-left: 0.5rem;">
               Wróć do oferty
             </a>
-            <a class="btn btn-ghost" href="/realizacje/" style="margin-left: 0.5rem;">
+            <a class="btn btn-ghost" href={withBase('/realizacje/')} style="margin-left: 0.5rem;">
               Realizacje
             </a>
           </p>

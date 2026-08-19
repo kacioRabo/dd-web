@@ -1,21 +1,21 @@
 ---
-import { site } from '../lib/site';
+import { site, withBase } from '../lib/site';
 import logo from '../assets/logo.png';
 
 const path = Astro.url.pathname;
 const links = [
-  { href: '/#o-firmie', id: 'o-firmie', label: 'O firmie' },
-  { href: '/#oferta', id: 'oferta', label: 'Oferta' },
-  { href: '/realizacje/', id: 'realizacje', label: 'Realizacje' },
-  { href: '/#referencje', id: 'referencje', label: 'Referencje' },
-  { href: '/#aktualnosci', id: 'aktualnosci', label: 'Aktualności' },
-  { href: '/#kontakt', id: 'kontakt', label: 'Kontakt' },
+  { href: withBase('/#o-firmie'), id: 'o-firmie', label: 'O firmie' },
+  { href: withBase('/#oferta'), id: 'oferta', label: 'Oferta' },
+  { href: withBase('/realizacje/'), id: 'realizacje', label: 'Realizacje' },
+  { href: withBase('/#referencje'), id: 'referencje', label: 'Referencje' },
+  { href: withBase('/#aktualnosci'), id: 'aktualnosci', label: 'Aktualności' },
+  { href: withBase('/#kontakt'), id: 'kontakt', label: 'Kontakt' },
 ];
 ---
 
 <header class="site-header">
   <div class="wrap header-inner">
-    <a class="logo" href="/#start" title={site.name}>
+    <a class="logo" href={withBase('/#start')} title={site.name}>
       <img src={logo.src} width={logo.width} height={logo.height} alt={site.name} />
     </a>
     <input type="checkbox" id="nav-toggle" class="nav-toggle" />
@@ -25,7 +25,7 @@ const links = [
     <nav class="nav" aria-label="Główne">
       {
         links.map((item) => (
-          <a href={item.href} data-section={item.id} aria-current={path.startsWith('/realizacje/') && item.id === 'realizacje' ? 'page' : undefined}>
+          <a href={item.href} data-section={item.id} aria-current={path.startsWith(withBase('/realizacje/')) && item.id === 'realizacje' ? 'page' : undefined}>
             {item.label}
           </a>
         ))

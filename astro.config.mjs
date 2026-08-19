@@ -43,8 +43,11 @@ function includeInSitemap(page) {
   return true;
 }
 
+const githubPages = process.env.GITHUB_PAGES === 'true';
+
 export default defineConfig({
-  site: 'https://dobrydzwiek.pl',
+  site: githubPages ? 'https://kaciorabo.github.io' : 'https://dobrydzwiek.pl',
+  base: githubPages ? '/dd-web/' : '/',
   trailingSlash: 'always',
   build: {
     format: 'directory',

@@ -1,5 +1,5 @@
 ---
-import { site } from '../lib/site';
+import { site, withBase } from '../lib/site';
 ---
 
 <div class="cookie-banner" id="cookie-banner" hidden>
@@ -9,7 +9,7 @@ import { site } from '../lib/site';
         ? 'Używamy niezbędnych plików cookie, żeby strona działała. Statystyki (Google Analytics) włączamy tylko za Twoją zgodą.'
         : 'Ta strona używa niezbędnych plików cookie, żeby zapamiętać Twoje ustawienia.'
     }
-    Szczegóły: <a href="/cookies/">polityka cookies</a>.
+    Szczegóły: <a href={withBase('/cookies/')}>polityka cookies</a>.
   </p>
   <div class="cookie-actions">
     {

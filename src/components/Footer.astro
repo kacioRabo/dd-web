@@ -1,5 +1,5 @@
 ---
-import { site } from '../lib/site';
+import { site, withBase } from '../lib/site';
 import seo from '../data/seo.json';
 import Nap from './Nap.astro';
 const year = new Date().getFullYear();
@@ -20,7 +20,7 @@ const year = new Date().getFullYear();
       <ul class="footer-list">
         {seo.services.map((service) => (
           <li>
-            <a href={service.url}>{service.name}</a>
+            <a href={withBase(service.url)}>{service.name}</a>
           </li>
         ))}
       </ul>
@@ -41,16 +41,16 @@ const year = new Date().getFullYear();
       <p class="footer-heading">Menu</p>
       <ul class="footer-list">
         <li>
-          <a href="/#oferta">Oferta</a>
+          <a href={withBase('/#oferta')}>Oferta</a>
         </li>
         <li>
-          <a href="/realizacje/">Realizacje</a>
+          <a href={withBase('/realizacje/')}>Realizacje</a>
         </li>
         <li>
-          <a href="/#kontakt">Kontakt</a>
+          <a href={withBase('/#kontakt')}>Kontakt</a>
         </li>
         <li>
-          <a href="/cookies/">Polityka cookies</a>
+          <a href={withBase('/cookies/')}>Polityka cookies</a>
         </li>
         <li>
           <button type="button" class="footer-text-btn" data-open-cookies>Ustawienia cookies</button>

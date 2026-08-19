@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import { withBase } from '../../lib/site';
 
 export async function getStaticPaths() {
   const posts = await getCollection('aktualnosci');
@@ -37,7 +38,7 @@ const { Content } = await render(post);
           post.data.image && (
             <p>
               <img
-                src={post.data.image}
+                src={withBase(post.data.image)}
                 alt={post.data.title}
                 width="1200"
                 height="640"
