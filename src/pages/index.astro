@@ -56,7 +56,7 @@ const realizacje = (await getCollection('realizacje'))
       <div class="hero-actions">
         <a class="btn btn-primary js-hero-call" href={`tel:${site.phonePrimary}`}>Zadzwoń {site.phonePrimaryLabel}</a>
         <a class="btn btn-white js-hero-offer" href="#oferta">Zobacz ofertę</a>
-        <a class="btn btn-white" href={withBase('/realizacje/')}>Realizacje</a>
+        <a class="btn btn-white js-hero-realizacje" href={withBase('/realizacje/')}>Realizacje</a>
       </div>
     </div>
   </section>

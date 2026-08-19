@@ -52,8 +52,7 @@
       let idle = 0;
       const pointer = { x: 0, y: 0, inside: false };
       let snapAim = true;
-      const callBtn = document.querySelector('.js-hero-call');
-      const offerBtn = document.querySelector('.js-hero-offer');
+      const ctaBtns = [...document.querySelectorAll('.hero-actions .btn')];
 
       const btnAim = (btn) => {
         if (!(btn instanceof HTMLElement) || width < 1 || height < 1) return null;
@@ -504,17 +503,23 @@
         const span = width - margin * 2;
         const s = Math.min(1.25, Math.max(0.82, width / 1200));
         const originY = padTop + Math.max(58, 52 * s) - 50;
-        const call = btnAim(callBtn);
-        const offer = btnAim(offerBtn);
+        const spots = ctaBtns.map(btnAim).filter(Boolean);
         let aimX = width * (0.82 - tScroll * 0.7) + Math.sin(time * 0.32) * width * 0.05 * idle;
         let aimY = height * (0.68 - tScroll * 0.08) + Math.cos(time * 0.26) * height * 0.035 * idle;
         let followFocus = lerp(10, 1.4, idle);
-        if (call && tScroll < 0.14) {
-          const sweep = 0.5 + 0.5 * Math.sin(time * 0.42);
-          const u = sweep * sweep * (3 - 2 * sweep);
-          const target = offer && !reduce ? offer : call;
-          aimX = lerp(call.x, target.x, u);
-          aimY = lerp(call.y, target.y, u);
+        if (spots.length && tScroll < 0.14) {
+          if (reduce || spots.length === 1) {
+            aimX = spots[0].x;
+            aimY = spots[0].y;
+          } else {
+            const sweep = 0.5 + 0.5 * Math.sin(time * 0.42);
+            const u = sweep * sweep * (3 - 2 * sweep);
+            const scaled = u * (spots.length - 1);
+            const i = Math.min(spots.length - 2, Math.floor(scaled));
+            const f = scaled - i;
+            aimX = lerp(spots[i].x, spots[i + 1].x, f);
+            aimY = lerp(spots[i].y, spots[i + 1].y, f);
+          }
           followFocus = 5.5;
         }
         if (!reduce && pointer.inside) {
@@ -523,8 +528,8 @@
           followFocus = 18;
         }
         if (!focus.x || snapAim) {
-          focus.x = call ? call.x : aimX;
-          focus.y = call ? call.y : aimY;
+          focus.x = spots[0] ? spots[0].x : aimX;
+          focus.y = spots[0] ? spots[0].y : aimY;
         }
         focus.x = damp(focus.x, aimX, dt, followFocus);
         focus.y = damp(focus.y, aimY, dt, followFocus);
@@ -539,7 +544,7 @@
           const lookTilt = Math.acos(Math.min(0.96, Math.max(0.28, dirY)));
           const lookPan = Math.max(-1.15, Math.min(1.15, Math.atan2(-dxAim, dyAim)));
           const m = motors[i];
-          const onCta = Boolean(call && tScroll < 0.14);
+          const onCta = Boolean(spots.length && tScroll < 0.14);
           const follow = pointer.inside && !reduce ? 14 : onCta ? 6.2 : lerp(8.2, 1.2, idle);
           if (snapAim) {
             m.pan = lookPan;
@@ -567,7 +572,7 @@
             s,
           });
         }
-        if (snapAim && call) snapAim = false;
+        if (snapAim && spots.length) snapAim = false;
 
         ctx.globalCompositeOperation = 'source-over';
         ctx.fillStyle = '#1a1a1d';
