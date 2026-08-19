@@ -1,0 +1,37 @@
+<button class="scroll-top" type="button" aria-label="Wróć na górę" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      d="M12 5.5 5.8 11.7l1.4 1.4L11 9.3V19h2V9.3l3.8 3.8 1.4-1.4Z"
+      fill="currentColor"></path>
+  </svg>
+</button>
+
+<script is:inline>
+  (function () {
+    const btn = document.querySelector('.scroll-top');
+    if (!btn) return;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const showAfter = 360;
+    let ticking = false;
+
+    const sync = () => {
+      ticking = false;
+      btn.hidden = false;
+      btn.classList.toggle('is-visible', window.scrollY > showAfter);
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(sync);
+    };
+
+    btn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    });
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    sync();
+  })();
+</script>
